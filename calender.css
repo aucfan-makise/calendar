@@ -1,0 +1,45 @@
+.calender_table{
+border-collapse: collapse;
+}
+.calender_table td{
+width: 80;
+}
+.calender_table tr{
+vertical-align: top;
+height: 80;
+}
+.calender_table_title{
+vertical-align: bottom;
+text-align: center;
+background-color: green;
+}
+
+tr.calender_week_row{
+height: 30;
+background-color: #BDBDBD;
+}
+td.calender_week_column{
+border: solid 1px;
+text-align: center;
+vertical-align: middle;
+}
+
+tr.calender_day_row{
+vertical-align: middle;
+border-bottom: none;
+font-size: 10px;
+height: 10;
+background-color: red;
+border-style: none;
+}
+td.calender_day_column{
+border-left: solid 1px;
+border-right: solid 1px;
+text-align: left;
+}
+
+.calender_nomal_column{
+border-bottom: solid 1px;
+border-left: solid 1px;
+border-right: solid 1px;
+}
