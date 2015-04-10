@@ -11,6 +11,7 @@
 	</head>
 	<body>
 <?php 
+	$calendarNum = 3;
 	$currentCalendarData = new CurrentCalendarData();
 	$centerCalendarData = new CurrentCalendarData();
 	
@@ -23,6 +24,10 @@
 		$centerCalendarData = new CalendarData($_GET["date_select"]);
 	else
 		$centerCalendarData = new CalendarData($currentCalendarData->getYear()."-".$currentCalendarData->getMonth());
+	
+// 	カレンダーの数
+	if($_GET["calendarNum"] != null)
+		$calendarNum = $_GET["calendarNum"];
 ?>
 		<form method="get" action="calendar.php">
 			<button name="pre" value="
@@ -46,15 +51,22 @@
 <?php 		} else ?>
 				<option value="<?php echo $value ?>"><?php echo $output ?></option>
 <?php	} ?>
- 
 				</select>
 				<input type="submit" value="select">
+			</p>
+			<p>
+			表示するカレンダーの数
+				<input type="text" size=2 maxlength="2" name="calendarNum" value="<?php echo $calendarNum ?>">
+				<input type= "submit" value="change">
 			</p>
 		</form>
 		<table>
 			<tr>
 <?php		
-		for ($i = -1; $i < 2; ++$i){
+// カレンダーの表示
+		$calendarLoopStart = "-".floor($calendarNum / 2);
+		$calendarLoopEnd = ceil($calendarNum / 2);
+		for ($i = $calendarLoopStart; $i < $calendarLoopEnd; ++$i){
 			$calc = $centerCalendarData->getCalcMonth($i);
 			if ($calc[0] == $currentCalendarData->getYear() && $calc[1] == $currentCalendarData->getMonth())
 				$printer = new CalendarPrinter($calc[0], $calc[1], $currentCalendarData->getDay());
@@ -64,6 +76,12 @@
 				<td>
 <?php		$printer->printCalendar() ?>
 				</td>
+				
+<?php 		if(($calendarLoopStart - $i + 2) % 3 == 0){ ?>
+			</tr>
+			<tr>
+<?php }?>
+			
 <?php 	} ?>
 		</table>
 	</body>

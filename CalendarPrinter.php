@@ -6,12 +6,15 @@ class CalendarPrinter{
 	private $month;
 	private $today;
 	private $lastDay;
+	private $nextMonthDay = 0;
+	private $beforeMonthLastDay;
 	
 	public function __construct($year, $month, $day = null){
 		$this->year = $year;
 		$this->month = $month;
 		if ($day != null)
 			$this->today = (int) $day;
+		$this->beforeMonthLastDay = date('d', strtotime($year."-".$month."-"."01 -1 day"));
 	}
 	
 	public function printCalendar(){
@@ -69,6 +72,13 @@ class CalendarPrinter{
 <?php		}
 			if($i > 0 && $i <= $this->lastDay)
 				echo $i;
+			elseif ($i > $this->lastDay){
+				$this->nextMonthDayNum++;
+				echo $this->nextMonthDayNum;
+			}
+			elseif ($i <= 0)
+				echo $this->beforeMonthLastDay + $i;
+			
 			if($publicHolidayData->isHoliday($i))
 				echo " ".$publicHolidayData->getHolidayName($i);
 ?>
