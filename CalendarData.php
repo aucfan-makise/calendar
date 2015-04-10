@@ -15,6 +15,7 @@ class CalendarData{
 	public function getMonth(){
 		return $this->month;
 	}
+// 	配列で年と月を返す
 	public function getCalcMonth($num){
 		if ($num > 0)
 			$cal = date("Y-m", strtotime($this->year."-".$this->month." + ".$num." month"));

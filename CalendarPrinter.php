@@ -1,4 +1,6 @@
 <?php
+require "PublicHolidayRequester.php";
+
 class CalendarPrinter{
 	private $year;
 	private $month;
@@ -44,18 +46,24 @@ class CalendarPrinter{
 	}
 	
 	private function printDayRow($start, $end){
+		$publicHolidayData = new PublicHolidayRequester($this->year, $this->month);
 		echo '<tr class="calendar_day_row">';
 		for ($i = $start; $i <= $end; ++$i){
 			if ($i === $this->today)
 				echo '<td class="calendar_today_column">';
+			elseif ($publicHolidayData->isHoliday($i))
+				echo '<td class="calendar_public_holiday_column">';
 			elseif ($i === $start)
 				echo '<td class="calendar_sunday_column">';
 			elseif ($i === $start + 6)
 				echo '<td class="calendar_saturday_column">';
 			else
 				echo '<td class="calendar_day_column">';
+			
 			if($i > 0 && $i <= $this->lastDay)
 				echo $i;
+			if($publicHolidayData->isHoliday($i))
+				echo " ".$publicHolidayData->getHolidayName($i);
 			echo '</td>';
 		}
 		echo	'</tr>';

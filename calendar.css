@@ -27,9 +27,11 @@ vertical-align: middle;
 tr.calendar_day_row{
 vertical-align: middle;
 border-bottom: none;
-font-size: 10px;
+font-size: 9px;
 height: 20;
 border-style: none;
+border-left: solid 1px;
+border-right: solid 1px;
 }
 td.calendar_day_column{
 border-left: solid 1px;
@@ -38,21 +40,19 @@ text-align: left;
 }
 td.calendar_sunday_column{
 background-color: #FC8F8F;
-border-left: solid 1px;
-border-right: solid 1px;
-text-align: left;	
 }
 td.calendar_saturday_column{
 background-color: #90EE90;
-border-left: solid 1px;
-border-right: solid 1px;
-text-align: left;
+}
+td.calendar_public_holiday_column{
+background-color: #AFEEEE;
+border-left: inherit;
+border-right: inherit;
 }
 td.calendar_today_column{
 background-color: #F5DEB3;
-border-left: solid 1px;
-border-right: solid 1px;
-text-align: left;
+border-left: inherit;
+border-right: inherit;
 }
 
 .calendar_nomal_column{
