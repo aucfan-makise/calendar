@@ -4,16 +4,12 @@
 //     初期化 カレンダーの数
     $calendar_num = 3;
     
-//     今日の日付
-    $today;
-    $today = date("Y-m-d");
-    
     //     表示するカレンダーの年月 Y-m
     $center_calendar;
     if(! is_null($_GET["pre"])) $center_calendar = $_GET["pre"];
     elseif(! is_null($_GET["next"])) $center_calendar = $_GET["next"];
     elseif(! is_null($_GET["date_select"])) $center_calendar = $_GET["date_select"];
-    else $center_calendar = date("Y-m");
+    else $center_calendar = date("Y-n");
     
     //     カレンダーの数
     if(! is_null($_GET["calendarNum"])) $calendar_num = $_GET["calendarNum"];
@@ -23,11 +19,16 @@
     $end_calendar = date("Y-n", strtotime($center_calendar." +".ceil($calendar_num /2)." month -1 month"));
     list($end_year, $end_month) = explode("-", $end_calendar);
     
-    $calendar_function = new CalendarFunction();
-    $calendar_function->createCarendarArray($start_year, $start_month, $end_year, $end_month);
+    $calendar_function = new CalendarFunction($start_year, $start_month, $end_year, $end_month);
     $calendar_array = $calendar_function->getCarendarArray();
     
-    $calendar_td = array("default" => "calendar_day_column", "0" => "calendar_sunday_column", "6" => "calendar_saturday_column", "public_holiday" => "calendar_public_holiday_column")
+    $calendar_td = array(
+    		"today" => "calendar_today_column", 
+    		"default" => "calendar_day_column", 
+    		"0" => "calendar_sunday_column", 
+    		"6" => "calendar_saturday_column", 
+    		"public_holiday" => "calendar_public_holiday_column"
+    );
 ?>
 <html>
     <head>
@@ -36,13 +37,13 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     </head>
     <body>
-        <form method="get" action="CopyOfcalendar.php">
-            <button name="pre" value="<?php echo date('Y-m', strtotime($center_calendar." -1 month"))?>">前</button>
-            <button name="next" value="<?php echo date('Y-m', strtotime($center_calendar." +1 month"))?>">次</button>
+        <form method="get" action="calendar.php">
+            <button name="pre" value="<?php echo date('Y-n', strtotime($center_calendar." -1 month"))?>">前</button>
+            <button name="next" value="<?php echo date('Y-n', strtotime($center_calendar." +1 month"))?>">次</button>
             <!-- コンボボックス -->
             <p>
                 <select name="date_select">
-                    <?php foreach (CalendarFunction::getComboBoxArray(date("Y-n", strtotime($today))) as $key => $value):?>
+                    <?php foreach ($calendar_function->getComboBoxArray() as $key => $value):?>
                         <?php if ($key === $center_calendar):?>
                     <option value="<?php echo $key ?>" selected><?php echo $value ?></option>
                         <?php else: ?>
@@ -81,81 +82,78 @@
         			</tr>
 <!--         			前月 -->
                         <?php for ($before_month = CalendarFunction::getBeforeMonth($printing), $day = date("t", strtotime($year."-".$month." -1 month")) - $calendar_array[$year][$month][1]["week_day"] + 1; $day <= date("t", strtotime($year."-".$month." -1 month")); ++$day):?>
-<?php switch ($calendar_array[$before_month['year']][$before_month['month']][$day]["week_day"]):?>
-<?php case 0:?>
-<pre><?php echo $calendar_array[$before_month['year']][$before_month['month']][$day]["week_day"]?></pre>
-<pre><?php echo $before_month['year']." ".$before_month['month']." ".$day?></pre>
-<tr class="calendar_day_row">
-<?php if (! empty($calendar_array[$before_month['year']][$before_month['month']][$day]["holiday_name"])):?>
-    <td class=<?php $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_array[$before_month['year']][$before_month['month']][$day]["holiday_name"]?></td>
-<?php else:?>
-    <td class=<?php echo $calendar_td["0"]?>><?php echo $day?></td>
-<?php endif;?>
-<?php break;?>
-<?php default:?>
-<?php if (! empty($calendar_array[$before_month['year']][$before_month['month']][$day]["holiday_name"])):?>
-    <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_array[$before_month['year']][$before_month['month']][$day]["holiday_name"]?></td>
-<?php else:?>
-    <td class=<?php echo $calendar_td["default"]?>><?php echo $day?></td>
-<?php endif;?>
-<?php endswitch;?>
+<!--                         日付の行 -->
+                            <?php if ($calendar_function->isSunday($before_month["year"], $before_month["month"], $day)):?>
+                                <tr class="calendar_day_row">
+                            <?php endif;?>
+                                
+<!--                             日付のセル -->
+                            <?php if ($calendar_function->isToday($before_month["year"], $before_month["month"], $day)):?>
+                                <td class=<?php echo $calendar_td["today"]?>><?php echo $day?></td>
+                            <?php elseif ($calendar_function->isHoliday($before_month["year"], $before_month["month"], $day)):?>
+                                <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_function->getHolidayName($before_month["year"], $before_month["month"], $day) ?></td>
+                            <?php elseif ($calendar_function->isSunday($before_month["year"], $before_month["month"], $day)):?>
+                                <td class=<?php echo $calendar_td["0"]?>><?php echo $day?></td>
+                            <?php else:?>
+                                <td class=<?php echo $calendar_td["default"]?>><?php echo $day?></td>
+                            <?php endif;?>
                         <?php endfor;?>
+                        
 <!--         			今月 -->
                         <?php for ($day = 1; $day <= date('t', strtotime($year."-".$month)); ++$day):?>
-<?php switch ($calendar_array[$year][$month][$day]["week_day"]):?>
-<?php case 0:?>
-<tr class="calendar_day_row">
-<?php if (! empty($calendar_array[$year][$month][$day]["holiday_name"])):?>
-    <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_array[$year][$month][$day]["holiday_name"] ?></td>
-<?php else:?>
-    <td class=<?php echo $calendar_td["0"]?>><?php echo $day?></td>
-<?php endif;?>
-<?php break;?>
-<?php case 6:?>
-<?php if(! empty($calendar_array[$year][$month][$day]["holiday_name"])):?>
-    <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_array[$year][$month][$day]["holiday_name"] ?></td>
-<?php else:?>
-    <td class=<?php echo $calendar_td["6"]?>><?php echo $day?></td>
-<?php endif;?>
-</tr>
-<tr>
-<?php for ($i = 0; $i < 7; ++$i):?>
-    <td class="calendar_nomal_column">test</td>
-<?php endfor;?>
-</tr>
-<?php break;?>
-<?php default:?>
-<?php if (! empty($calendar_array[$year][$month][$day]["holiday_name"])):?>
-    <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_array[$year][$month][$day]["holiday_name"]?></td>
-<?php else:?>
-    <td class=<?php echo $calendar_td["default"]?>><?php echo $day?></td>
-<?php endif;?>
-<?php endswitch;?>
+<!--                         日付の行 -->
+                            <?php if ($calendar_function->isSunday($year, $month, $day)):?>
+                                <tr class="calendar_day_row">
+                            <?php endif;?>
+                                
+<!--                             日付のセル -->
+                            <?php if ($calendar_function->isToday($year, $month, $day)):?>
+                                <td class=<?php echo $calendar_td["today"]?>><?php echo $day?></td>
+                            <?php elseif ($calendar_function->isHoliday($year, $month, $day)):?>
+                                <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_function->getHolidayName($year, $month, $day) ?></td>
+                            <?php elseif ($calendar_function->isSunday($year, $month, $day)):?>
+                                <td class=<?php echo $calendar_td["0"]?>><?php echo $day?></td>
+                            <?php elseif ($calendar_function->isSaturday($year, $month, $day)):?>
+                                <td class=<?php echo $calendar_td["6"]?>><?php echo $day?></td>
+                            <?php else:?>
+                                <td class=<?php echo $calendar_td["default"]?>><?php echo $day?></td>
+                            <?php endif;?>
+                                
+<!--                                 予定のセル -->
+                            <?php if ($calendar_function->isSaturday($year, $month, $day)):?>
+                            </tr>
+                            <tr>
+                                <?php for ($i = 0; $i < 7; ++$i):?>
+                                <td class="calendar_nomal_column">test</td>
+                                <?php endfor;?>
+                            </tr>
+                            <?php endif;?>
                         <?php endfor;?>
+                            
 <!--                         翌月 -->
                         <?php for ($next_month = CalendarFunction::getNextMonth($printing), $day = 1, $i = $calendar_array[$next_month["year"]][$next_month["month"]][1]["week_day"]; $i != 0 && $i <= 6; ++$day, ++$i):?>
-<?php switch ($calendar_array[$next_month["year"]][$next_month["month"]][$day]["week_day"]):?>
-<?php case 6:?>
-<?php if(! empty($calendar_array[$next_month["year"]][$next_month["month"]][$day]["holiday_name"])):?>
-    <td class=<?php echo $calendar_td["public_holiday"]?>> <?php echo $day." ".$calendar_array[$next_month["year"]][$next_month["month"]][$day]["holiday_name"]?></td>
-<?php else:?>
-    <td class=<?php echo $calendar_td["6"]?>> <?php echo $day ?></td>
-<?php endif;?>
-</tr>
-<tr>
-<?php for ($i = 0; $i < 7; ++$i):?>
-    <td class="calendar_nomal_column">test</td>
-<?php endfor;?>
-</tr>
-<?php break;?>
-<?php default:?>
-<?php if (! empty($calendar_array[$next_month["year"]][$next_month["month"]][$day]["holiday_name"])):?>
-    <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_array[$next_month["year"]][$next_month["month"]][$day]["holiday_name"]?></td>
-<?php else:?>
-    <td class=<?php echo $calendar_td["default"]?>><?php echo $day?></td>
-<?php endif;?>
-<?php endswitch;?>
+<!--                             日付のセル -->
+                            <?php if ($calendar_function->isToday($next_month["year"], $next_month["month"], $day)):?>
+                                <td class=<?php echo $calendar_td["today"]?>><?php echo $day?></td>
+                            <?php elseif ($calendar_function->isHoliday($next_month["year"], $next_month["month"], $day)):?>
+                                <td class=<?php echo $calendar_td["public_holiday"]?>><?php echo $day." ".$calendar_function->getHolidayName($next_month["year"], $next_month["month"], $day) ?></td>
+                            <?php elseif ($calendar_function->isSaturday($next_month["year"], $next_month["month"], $day)):?>
+                                <td class=<?php echo $calendar_td["6"]?>><?php echo $day?></td>
+                            <?php else:?>
+                                <td class=<?php echo $calendar_td["default"]?>><?php echo $day?></td>
+                            <?php endif;?>
+                                
+<!--                                 予定のセル -->
+                            <?php if ($calendar_function->isSaturday($next_month["year"], $next_month["month"], $day)):?>
+                            </tr>
+                            <tr>
+                                <?php for ($i = 0; $i < 7; ++$i):?>
+                                <td class="calendar_nomal_column">test</td>
+                                <?php endfor;?>
+                            </tr>
+                            <?php endif;?>
                         <?php endfor;?>
+                        
                         </table></td>
             <?php endfor;?>
             </tr>
