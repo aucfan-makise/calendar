@@ -249,13 +249,6 @@ class CalendarFunction {
         return $this->calendar_array;
     }
 
-    /**
-     * カレンダーの日付のtdのクラス名を返す
-     */
-    public static function getTdClass($day){
-        return $day["td_class"];
-    }
-    
     /**引数は指定された年月 Y-m
      * コンボボックスに表示する年月の配列を返す
      * 前後１０ヶ月

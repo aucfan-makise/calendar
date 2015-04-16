@@ -63,7 +63,7 @@
                                     <tr class="calendar_day_row">
                                 <?php endif;?>
                                     
-                                        <td class=<?php echo CalendarFunction::getTdClass($day)?>>
+                                        <td class=<?php echo $day["td_class"]?>>
                                             <?php echo $day["day"]?>
                                             <?php echo CalendarFunction::isHoliday($day) ? " ".CalendarFunction::getHolidayName($day) : ""?>
                                         </td>
