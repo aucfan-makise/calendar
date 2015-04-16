@@ -1,0 +1,62 @@
+.calendar_table{
+border-collapse: collapse;
+}
+.calendar_table td{
+width: 80;
+}
+.calendar_table tr{
+vertical-align: top;
+height: 80;
+}
+.calendar_table_title{
+vertical-align: bottom;
+text-align: center;
+background-color: green;
+}
+
+tr.calendar_week_row{
+height: 30;
+background-color: #BDBDBD;
+}
+td.calendar_week_column{
+border: solid 1px;
+text-align: center;
+vertical-align: middle;
+}
+
+tr.calendar_day_row{
+vertical-align: middle;
+border-bottom: none;
+font-size: 9px;
+height: 20;
+border-style: none;
+border-left: solid 1px;
+border-right: solid 1px;
+}
+td.calendar_day_column{
+border-left: solid 1px;
+border-right: solid 1px;
+text-align: left;
+}
+td.calendar_sunday_column{
+background-color: #FC8F8F;
+}
+td.calendar_saturday_column{
+background-color: #90EE90;
+}
+td.calendar_public_holiday_column{
+background-color: #AFEEEE;
+border-left: inherit;
+border-right: inherit;
+}
+td.calendar_today_column{
+background-color: #F5DEB3;
+border-left: inherit;
+border-right: inherit;
+}
+
+.calendar_nomal_column{
+border-bottom: solid 1px;
+border-left: solid 1px;
+border-right: solid 1px;
+}
