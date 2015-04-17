@@ -3,8 +3,8 @@
 
 カラム名	型
 my_calendar_id	int	auto_increment
-title	varchar	not null
-detail	varchar
+title	varchar(255)	not null
+detail	varchar(255)
 start_time	datetime	not null
 end_time	datetime	not null
 created_at	datetime	not null
