@@ -1,62 +1,83 @@
-.calendar_table{
-border-collapse: collapse;
-}
-.calendar_table td{
-width: 80;
-}
-.calendar_table tr{
-vertical-align: top;
-height: 80;
-}
-.calendar_table_title{
-vertical-align: bottom;
-text-align: center;
-background-color: green;
+.calendar_table {
+	border-collapse: collapse;
 }
 
-tr.calendar_week_row{
-height: 30;
-background-color: #BDBDBD;
-}
-td.calendar_week_column{
-border: solid 1px;
-text-align: center;
-vertical-align: middle;
+.calendar_table td {
+	width: 60;
+	margin: 0;
+	padding: 0;
 }
 
-tr.calendar_day_row{
-vertical-align: middle;
-border-bottom: none;
-font-size: 9px;
-height: 20;
-border-style: none;
-border-left: solid 1px;
-border-right: solid 1px;
-}
-td.calendar_day_column{
-border-left: solid 1px;
-border-right: solid 1px;
-text-align: left;
-}
-td.calendar_sunday_column{
-background-color: #FC8F8F;
-}
-td.calendar_saturday_column{
-background-color: #90EE90;
-}
-td.calendar_public_holiday_column{
-background-color: #AFEEEE;
-border-left: inherit;
-border-right: inherit;
-}
-td.calendar_today_column{
-background-color: #F5DEB3;
-border-left: inherit;
-border-right: inherit;
+.calendar_table tr {
+	vertical-align: top;
+	height: 80;
 }
 
-.calendar_nomal_column{
-border-bottom: solid 1px;
-border-left: solid 1px;
-border-right: solid 1px;
+.calendar_table_title {
+	vertical-align: bottom;
+	text-align: center;
+	background-color: green;
+}
+
+tr.calendar_week_row {
+	height: 30;
+	background-color: #BDBDBD;
+}
+
+td.calendar_week_column {
+	width: 60px;
+	margin: -1px;
+	padding: -1px;
+	border: solid 1px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.calendar_date_div{
+	border-top : solid 1px;
+	border-left : solid 1px;
+	border-right : solid 1px;
+	height: 15px;
+	font-size: 9px;
+}
+.calendar_sunday_div{
+	border-top : solid 1px;
+	border-left : solid 1px;
+	border-right : solid 1px;	
+	height: 15px;
+	background-color: #FC8F8F;
+	font-size: 9px;
+}
+.calendar_saturday_div{
+	border-top : solid 1px;
+	border-left : solid 1px;
+	border-right : solid 1px;
+	height: 15px;
+	font-size: 9px;
+	background-color: #90EE90;
+}
+.calendar_public_holiday_div{
+	border-top : solid 1px;
+	border-left : solid 1px;
+	border-right : solid 1px;
+	height: 15px;
+	overflow: hidden;
+	font-size: 9px;
+	background-color: #AFEEEE;
+}
+.calendar_today_div{
+	border-top : solid 1px;
+	border-left : solid 1px;
+	border-right : solid 1px;
+	height: 15px;
+	font-size: 9px;
+	background-color: #F5DEB3;
+}
+.calendar_schedule_div{
+	overflow: auto;
+	height: 70px;
+	font-size: 9px;
+	border-left : solid 1px;
+	border-right : solid 1px;
+	border-bottom: solid 1px;
 }

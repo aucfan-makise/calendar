@@ -7,12 +7,21 @@ class CalendarFunction {
     const MONTH_START_OPTION_NAME = "start_mon";
     const MONTH_END_OPTION_NAME = "end_mon";
     
+    const AUCTOPIC = "http://aucfan.com/article/feed/";
+    
     private static $calendar_td = array( 
         "today" => "calendar_today_column",
         "default" => "calendar_day_column",
         "0" => "calendar_sunday_column",
         "6" => "calendar_saturday_column",
         "public_holiday" => "calendar_public_holiday_column"
+    );
+    private static $calendar_div = array(
+            "today" => "calendar_today_div",
+            "default" => "calendar_date_div",
+            "0" => "calendar_sunday_div",
+            "6" => "calendar_saturday_div",
+            "public_holiday" => "calendar_public_holiday_div"
     );
     
     // 今日の日付の配列
@@ -27,6 +36,11 @@ class CalendarFunction {
     private $end_calendar;
 //     表示するカレンダーの数
     private $calendar_size;
+    
+//     祝日のデータ
+    private $public_holiday_array;
+//     オークショントピックのデータ
+    private $auction_topic_array;
     
     public function __construct($selected_date, $calendar_size){
     	$this->today = explode("-", date("Y-n-d"));
@@ -125,6 +139,36 @@ class CalendarFunction {
         return $res;
     }
     
+    private function getAucfanTopicData($start_date){
+        $topics_array = array();
+        foreach (range(1, 36) as $page){
+            $topic = array();
+            $url = self::AUCTOPIC."?paged=".$page;
+            $res = null;
+            try {
+                $res = simplexml_load_file($url);
+            } catch ( Exception $e){
+                echo "<pre>オークショントピックが読み込めませんでした<pre>";
+            }
+            foreach ($res->channel->item as $topics){
+                if (strtotime($this->end_calendar) <= strtotime($topic_array["time"])) break 2;
+    //             0:year 1:month 2:day 3:hour 4:minute 5:second
+                $time = explode("-", date("Y-n-d-H-i-s", strtotime($topics->pubDate)));
+                
+                if (! in_array($time[0], $topics_array)) $topics_array[$time[0]][] = array();
+                if (! in_array($time[1], $topics_array[$time[0]])) $topics_array[$time[0]][$time[1]][] = array();
+                if (! in_array($time[2], $topics_array[$time[0]][$time[1]])) $topics_array[$time[0]][$time[1]][$time[2]][] = array();
+                
+                $topic_array = array();
+                $topic_array["time"] = $time[3]."-".$time[4]."-".$time[5];
+                $topic_array["title"] = (string) $topics->title;
+                $topic_array["link"] = (string) $topics->link;
+                $topics_array[$time[0]][$time[1]][$time[2]][] = $topic_array;
+            }
+        }
+        return $topics_array;
+    }
+    
     /**
      *   引数は表示するカレンダーの最初と最後の年月
      *   カレンダーの配列を返す
@@ -140,16 +184,17 @@ class CalendarFunction {
         $end = date ( "Y-n", strtotime ( $end_year . "-" . $end_month . " + 1 month" ) );
         list ( $end_year, $end_month ) = explode ( "-", $end );
         
-        $public_holiday_array = $this->getPublicHolidayData ( $start_year, $start_month, $end_year, $end_month );
+        $this->public_holiday_array = $this->getPublicHolidayData ( $start_year, $start_month, $end_year, $end_month );
+        $this->auction_topic_array = $this->getAucfanTopicData($this->start_calendar);
         for($year = $start_year; $year <= $end_year; ++ $year) {
             if ($year == $start_year && $year == $end_year) {
-                $array [$year] = $this->createYearCarendarArray ( $year, $start_month, $end_month, $public_holiday_array );
+                $array [$year] = $this->createYearCarendarArray ( $year, $start_month, $end_month );
             } elseif ($year == $start_year && $year < $end_year) {
-                $array [$year] = $this->createYearCarendarArray ( $year, $start_month, 12, $public_holiday_array );
+                $array [$year] = $this->createYearCarendarArray ( $year, $start_month, 12 );
             } elseif ($year > $start_year && $year < $end_year) {
-                $array [$year] = $this->createYearCarendarArray ( $year, 1, 12, $public_holiday_array );
+                $array [$year] = $this->createYearCarendarArray ( $year, 1, 12 );
             } elseif ($year > $start_year && $year == $end_year) {
-                $array [$year] = $this->createYearCarendarArray ( $year, 1, $end_month, $public_holiday_array );
+                $array [$year] = $this->createYearCarendarArray ( $year, 1, $end_month);
             }
         }
         
@@ -160,7 +205,7 @@ class CalendarFunction {
      * 引数は生成するカレンダーの年、最初の月、最後の月、祝日のデータ
      * 一年分位内のカレンダーの配列を生成する
      */
-    private function createYearCarendarArray($year, $start_month, $end_month, $public_holiday_array) {
+    private function createYearCarendarArray($year, $start_month, $end_month) {
         $outer_array = array ();
         for($month = $start_month; $month <= $end_month; ++ $month) {
             $inner_array = array ();
@@ -170,26 +215,40 @@ class CalendarFunction {
                 $array ['day'] = $day;
                 if($day == $this->today[2] && $month == $this->today[1] && $year == $this->today[0]){
                     $array["td_class"] = self::$calendar_td["today"];
+                    $array["div_class"] = self::$calendar_div["today"];
                 }elseif($array["week_day"] == 0){
                     $array["td_class"] = self::$calendar_td["0"];
+                    $array["div_class"] = self::$calendar_div["0"];
                 }elseif ($array["week_day"] == 6){
                     $array["td_class"] = self::$calendar_td["6"];
+                    $array["div_class"] = self::$calendar_div["6"];
                 }else{
                     $array["td_class"] = self::$calendar_td["default"];
+                    $array["div_class"] = self::$calendar_div["default"];
                 }
                 $holiday_name = "";
-                foreach ( $public_holiday_array->response->month as $month_array ) {
+                foreach ( $this->public_holiday_array->response->month as $month_array ) {
                     if ($month_array->attributes ()->year == $year && $month_array->attributes ()->month == $month) {
                         foreach ( $month_array->mday as $day_array ) {
                             if ($day_array->attributes ()->mday == $day) {
                                 $holiday_name = ( string ) $day_array ['holiday_name'];
                                 $array['td_class'] = self::$calendar_td["public_holiday"];
+                                $array["div_class"] = self::$calendar_div["public_holiday"];
                                 break 2;
                             }
                         }
                     }
                 }
                 $array ['holiday_name'] = $holiday_name;
+                $aucfan_topics = array();
+                if (! is_null($this->auction_topic_array[$year][$month][$day])){
+                    foreach($this->auction_topic_array[$year][$month][$day] as $topic){
+                        if(empty($topic)) continue;
+                        
+                        $aucfan_topics[] = $topic;
+                    }
+                }
+                $array['aucfan_topic'] = $aucfan_topics;
                 $inner_array [$day] = $array;
                 $inner_array ["last_day"] =& end($inner_array);
                 $inner_array ["in_range"] = $this->isInRange($year."-".$month) ? true : false;
