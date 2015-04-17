@@ -2,12 +2,12 @@
 テーブル名	my_calendar
 
 カラム名	型
-my_calendar_id	int
-title	varchar
+my_calendar_id	int	auto_increment
+title	varchar	not null
 detail	varchar
-start_time	datetime
-end_time	datetime
-created_at	datetime
-updated_at	datetime
-deleted_at	datetime
+start_time	datetime	not null
+end_time	datetime	not null
+created_at	datetime	not null
+update_at	datetime	not null
+deleted_at	datetime	not null
 
