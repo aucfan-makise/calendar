@@ -8,6 +8,10 @@ class CalendarFunction {
     const MONTH_END_OPTION_NAME = "end_mon";
     
     const AUCTOPIC = "http://aucfan.com/article/feed/";
+
+    const DATABASE_NAME = "schedule";
+    const TABLE_NAME = "my_schedules";
+    const DATABASE_USER_NAME = "makise";
     
     private static $calendar_div = array(
             "today" => "calendar_today_div",
@@ -35,6 +39,49 @@ class CalendarFunction {
 //     オークショントピックのデータ
     private $auction_topic_array;
     
+    private $connection;
+    
+    public function connectionTest(){
+        $link = mysql_connect("localhost", self::DATABASE_USER_NAME, "");
+        if (! $link){
+            die("失敗");
+        }
+        print("<pre>成功</pre>");
+        
+        $close_flag = mysql_close($link);
+        if($close_flag){
+            print("<pre>成功</pre>");
+        }
+    }
+    
+    public function isTodaysYear($year){
+        return $this->today[0] == $year ? true : false;
+    }
+    public function isTodaysMonth($month){
+        return $this->today[1] == $month ? true : false;
+    }
+    public function isTodaysDay($day){
+        return $this->today[2] == $day ? true : false;
+    }
+    
+    private function insertSchedule($user_title, $user_detail, $user_start_time, $user_end_time){
+        try {
+            $stmt = $this->connection->prepare("INSERT INTO my_schedules (title, detail, start_time, end_time, created_at, update_at) values(:title, :detail, :start_time, :end_time, now(), now())");
+            $stmt->bindParam(':title', $title);
+            $stmt->bindParam(":detail", $detail);
+            $stmt->bindParam(":start_time", $start_time);
+            $stmt->bindParam(":end_time", $end_time);
+            $title = $user_title;
+            $detail = $user_detail;
+            $start_time = $user_start_time;
+            $end_time = $user_end_time;
+            $stmt->execute();
+            $stmt = null;
+        } catch (PDOException $e){
+            echo "<pre> エラー:".$e->getMessage()."</pre>";
+            die();
+        }
+    }
     public function __construct($selected_date, $calendar_size){
     	$this->today = explode("-", date("Y-n-d"));
     	$this->selected_date = is_null($selected_date) ? $this->today[0]."-".$this->today[1] : $selected_date; 
@@ -51,6 +98,8 @@ class CalendarFunction {
     	$this->end_calendar = date("Y-n", strtotime($this->selected_date." +".ceil($this->calendar_size / 2)." month -1 month"));
         list($end_year, $end_month) = explode("-", $this->end_calendar);
         $this->calendar_array = $this->createCarendarArray($start_year, $start_month, $end_year, $end_month);
+        
+        $this->connection = new PDO('mysql:host=localhost;dbname='.self::DATABASE_NAME, self::DATABASE_USER_NAME, "");
     }
 
     /**
@@ -308,6 +357,13 @@ class CalendarFunction {
         for($i = - 10; $i <= 10; ++ $i) {
             $array [date ( "Y-n", strtotime ( $year_month . " " . $i . " month" ) )] = date ( "Y年n月", strtotime ( $year_month . " " . $i . " month" ) );
         }
+        return $array;
+    }
+    
+    public function getScheduleYear() {
+        $array = array();
+        foreach (range(0, 3) as $year) $array[] = $this->today[0] + $year;
+        
         return $array;
     }
     

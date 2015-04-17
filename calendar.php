@@ -29,6 +29,28 @@
                 <input type="text" size=2 maxlength="2" name="calendar_size" value="<?php echo $calendar_function->getCalendarSize() ?>">
                 <input type= "submit" value="change">
             </p>
+            <p>
+                <select name="schedule_year">
+                    <?php foreach ($calendar_function->getScheduleYear() as $year): ?>
+                    <option value="<?php echo $year ?>"<?php echo $calendar_function->isTodaysYear($year) ? " selected" : ""?>><?php echo $year ?></option>
+                    <?php endforeach;?>  
+                </select>年
+                <select name="schedule_month">
+                    <?php foreach (range(1, 12) as $month): ?>
+                    <option value="<?php echo $month ?>"<?php echo $calendar_function->isTodaysMonth($month) ? " selected" : ""?>><?php echo $month ?></option>
+                    <?php endforeach;?>
+                </select>月
+                <select name="schedule_day">
+                    <?php foreach (range(1, 31) as $day): ?>
+                    <option value="<?php echo $day ?>"<?php echo $calendar_function->isTodaysDay($day) ? " selected" : ""?>><?php echo $day ?></option>
+                    <?php endforeach;?>
+                </select>日<br>
+                タイトル:
+                <input type="text" size=10 maxlength="100" name="schedule_title"><br>
+                詳細　　:
+                <input type="text" size=100 maxlength="500" name="schedule_detail">
+                <input type="submit" value="登録">
+            </p>
         </form>
         <table id="calendar">
             <tr><!-- 1 -->
