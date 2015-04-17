@@ -9,13 +9,6 @@ class CalendarFunction {
     
     const AUCTOPIC = "http://aucfan.com/article/feed/";
     
-    private static $calendar_td = array( 
-        "today" => "calendar_today_column",
-        "default" => "calendar_day_column",
-        "0" => "calendar_sunday_column",
-        "6" => "calendar_saturday_column",
-        "public_holiday" => "calendar_public_holiday_column"
-    );
     private static $calendar_div = array(
             "today" => "calendar_today_div",
             "default" => "calendar_date_div",
@@ -214,16 +207,12 @@ class CalendarFunction {
                 $array ['week_day'] = ( string ) date ( "w", strtotime ( $year . "-" . $month . "-" . $day ) );
                 $array ['day'] = $day;
                 if($day == $this->today[2] && $month == $this->today[1] && $year == $this->today[0]){
-                    $array["td_class"] = self::$calendar_td["today"];
                     $array["div_class"] = self::$calendar_div["today"];
                 }elseif($array["week_day"] == 0){
-                    $array["td_class"] = self::$calendar_td["0"];
                     $array["div_class"] = self::$calendar_div["0"];
                 }elseif ($array["week_day"] == 6){
-                    $array["td_class"] = self::$calendar_td["6"];
                     $array["div_class"] = self::$calendar_div["6"];
                 }else{
-                    $array["td_class"] = self::$calendar_td["default"];
                     $array["div_class"] = self::$calendar_div["default"];
                 }
                 $holiday_name = "";
@@ -232,7 +221,6 @@ class CalendarFunction {
                         foreach ( $month_array->mday as $day_array ) {
                             if ($day_array->attributes ()->mday == $day) {
                                 $holiday_name = ( string ) $day_array ['holiday_name'];
-                                $array['td_class'] = self::$calendar_td["public_holiday"];
                                 $array["div_class"] = self::$calendar_div["public_holiday"];
                                 break 2;
                             }
@@ -251,7 +239,7 @@ class CalendarFunction {
                 $array['aucfan_topic'] = $aucfan_topics;
                 $inner_array [$day] = $array;
                 $inner_array ["last_day"] =& end($inner_array);
-                $inner_array ["in_range"] = $this->isInRange($year."-".$month) ? true : false;
+                $inner_array ["in_range"] = $this->inRange($year."-".$month) ? true : false;
             }
             $outer_array [$month] = $inner_array;
         }
@@ -263,7 +251,7 @@ class CalendarFunction {
      * @param unknown $date
      * @return boolean
      */
-    private function isInRange($date){
+    private function inRange($date){
     	return strtotime($this->start_calendar) <= strtotime($date) && strtotime($this->end_calendar) >= strtotime($date) ? true : false;
     }
     

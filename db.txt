@@ -1,0 +1,13 @@
+データベース名	calendar
+テーブル名	my_calendar
+
+カラム名	型
+my_calendar_id	int
+title	varchar
+detail	varchar
+start_time	datetime
+end_time	datetime
+created_at	datetime
+updated_at	datetime
+deleted_at	datetime
+
