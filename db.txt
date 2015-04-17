@@ -1,5 +1,5 @@
-データベース名	calendar
-テーブル名	my_calendar
+データベース名	schedule
+テーブル名	my_schedules
 
 カラム名	型
 my_calendar_id	int	auto_increment
