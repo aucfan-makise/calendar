@@ -9,5 +9,5 @@ start_time	datetime	not null
 end_time	datetime	not null
 created_at	datetime	not null
 update_at	datetime	not null
-deleted_at	datetime	not null
+deleted_at	datetime
 
