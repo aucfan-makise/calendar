@@ -1,7 +1,21 @@
 <?php 
     require "CalendarFunction.php";
 
-    $calendar_function = new CalendarFunction($_GET["selected_date"], $_GET["calendar_size"]);
+    $calendar_function = new CalendarFunction(
+            $_GET["selected_date"], 
+            $_GET["calendar_size"], 
+            $_GET["schedule_start_year"], 
+            $_GET["schedule_start_month"], 
+            $_GET["schedule_start_day"],
+            $_GET["schedule_start_hour"],
+            $_GET["schedule_start_minute"],
+            $_GET["schedule_end_year"],
+            $_GET["schedule_end_month"],
+            $_GET["schedule_end_day"],
+            $_GET["schedule_end_hour"],
+            $_GET["schedule_end_minute"],
+            $_GET["schedule_title"],
+            $_GET["schedule_detail"]);
 ?>
 <!DOCTYPE html>
     <head>
@@ -29,27 +43,67 @@
                 <input type="text" size=2 maxlength="2" name="calendar_size" value="<?php echo $calendar_function->getCalendarSize() ?>">
                 <input type= "submit" value="change">
             </p>
+<!--             予定登録 -->
             <p>
-                <select name="schedule_year">
+            予定の編集<br>
+            開始日
+                <select name="schedule_start_year">
                     <?php foreach ($calendar_function->getScheduleYear() as $year): ?>
                     <option value="<?php echo $year ?>"<?php echo $calendar_function->isTodaysYear($year) ? " selected" : ""?>><?php echo $year ?></option>
                     <?php endforeach;?>  
                 </select>年
-                <select name="schedule_month">
+                <select name="schedule_start_month">
                     <?php foreach (range(1, 12) as $month): ?>
                     <option value="<?php echo $month ?>"<?php echo $calendar_function->isTodaysMonth($month) ? " selected" : ""?>><?php echo $month ?></option>
                     <?php endforeach;?>
                 </select>月
-                <select name="schedule_day">
+                <select name="schedule_start_day">
                     <?php foreach (range(1, 31) as $day): ?>
                     <option value="<?php echo $day ?>"<?php echo $calendar_function->isTodaysDay($day) ? " selected" : ""?>><?php echo $day ?></option>
                     <?php endforeach;?>
-                </select>日<br>
+                </select>日
+                <select name="schedule_start_hour">
+                    <?php foreach (range(0, 23) as $hour): ?>
+                    <option value="<?php echo $hour ?>"<?php echo $calendar_function->isThisHour($hour) ? " selected" : ""?>><?php echo $hour?></option>
+                    <?php endforeach;?>
+                </select>時
+                <select name="schedule_start_minute">
+                    <?php foreach (range(0, 60) as $minute): ?>
+                    <option value="<?php echo $minute?>"<?php echo $calendar_function->isThisMinute($minute) ? " selected" : ""?>><?php echo $minute?></option>
+                    <?php endforeach;?>
+                </select>分<br>
+           終了日
+                <select name="schedule_end_year">
+                    <?php foreach ($calendar_function->getScheduleYear() as $year): ?>
+                    <option value="<?php echo $year ?>"<?php echo $calendar_function->isTodaysYear($year) ? " selected" : ""?>><?php echo $year ?></option>
+                    <?php endforeach;?>  
+                </select>年
+                <select name="schedule_end_month">
+                    <?php foreach (range(1, 12) as $month): ?>
+                    <option value="<?php echo $month ?>"<?php echo $calendar_function->isTodaysMonth($month) ? " selected" : ""?>><?php echo $month ?></option>
+                    <?php endforeach;?>
+                </select>月
+                <select name="schedule_end_day">
+                    <?php foreach (range(1, 31) as $day): ?>
+                    <option value="<?php echo $day ?>"<?php echo $calendar_function->isTodaysDay($day) ? " selected" : ""?>><?php echo $day ?></option>
+                    <?php endforeach;?>
+                </select>日
+                <select name="schedule_end_hour">
+                    <?php foreach (range(0, 23) as $hour): ?>
+                    <option value="<?php echo $hour ?>"<?php echo $calendar_function->isThisHour($hour) ? " selected" : ""?>><?php echo $hour?></option>
+                    <?php endforeach;?>
+                </select>時
+                <select name="schedule_end_minute">
+                    <?php foreach (range(0, 59) as $minute): ?>
+                    <option value="<?php echo $minute?>"<?php echo $calendar_function->isThisMinute($minute) ? " selected" : ""?>><?php echo $minute?></option>
+                    <?php endforeach;?>
+                </select>分<br>
                 タイトル:
                 <input type="text" size=10 maxlength="100" name="schedule_title"><br>
-                詳細　　:
+                詳細  :
                 <input type="text" size=100 maxlength="500" name="schedule_detail">
                 <input type="submit" value="登録">
+                
             </p>
         </form>
         <table id="calendar">
@@ -92,7 +146,10 @@
                                     <div class="calendar_schedule_div">
                                     <?php foreach ($day["aucfan_topic"] as $topic): ?>
                                         <a href="<?php echo $topic["link"] ?>"><?php echo $topic["title"] ?></a>
-                                    <?php endforeach; ?>
+                                    <?php endforeach;?>
+                                    <?php foreach ($day["schedules"] as $id => $schedule): ?>
+                                        <a href="calendar.php?edit_id=<?php echo $id ?>"><?php echo $schedule ?></a>
+                                    <?php endforeach;?>
                                     </div>
                                 </td>
                                 <?php if ($day["week_day"] == 6): ?>
