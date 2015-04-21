@@ -37,53 +37,49 @@ class CalendarFunction {
     // オークショントピックのデータ
     private $auction_topic_array;
     private $connection;
-    
     private $view_id;
-    
-    public function getViewId(){
+    public function getViewId() {
         return $this->view_id;
     }
-    
     private $modified_flag;
-    
-    public function getModifiedFlag(){
+    public function getModifiedFlag() {
         return $this->modified_flag;
     }
-
+    
     /**
      *
-     * @param unknown $selected_date
-     * @param unknown $calendar_size
-     * @param unknown $schedule_start_year
-     * @param unknown $schedule_start_month
-     * @param unknown $schedule_start_day
-     * @param unknown $schedule_start_hour
-     * @param unknown $schedule_start_minute
-     * @param unknown $schedule_end_year
-     * @param unknown $schedule_end_month
-     * @param unknown $schedule_end_day
-     * @param unknown $schedule_end_hour
-     * @param unknown $schedule_end_minute
-     * @param unknown $schedule_title
-     * @param unknown $schedule_detail
+     * @param unknown $selected_date            
+     * @param unknown $calendar_size            
+     * @param unknown $schedule_start_year            
+     * @param unknown $schedule_start_month            
+     * @param unknown $schedule_start_day            
+     * @param unknown $schedule_start_hour            
+     * @param unknown $schedule_start_minute            
+     * @param unknown $schedule_end_year            
+     * @param unknown $schedule_end_month            
+     * @param unknown $schedule_end_day            
+     * @param unknown $schedule_end_hour            
+     * @param unknown $schedule_end_minute            
+     * @param unknown $schedule_title            
+     * @param unknown $schedule_detail            
      */
-    public function __construct($selected_date, $calendar_size, 
-            $schedule_register_flag, $schedule_modify_flag, $schedule_delete_flag, 
-            $schedule_start_year, $schedule_start_month, $schedule_start_day, $schedule_start_hour, $schedule_start_minute, 
-            $schedule_end_year, $schedule_end_month, $schedule_end_day, $schedule_end_hour, $schedule_end_minute, 
-            $schedule_title, $schedule_detail, $view_id) {
-        
-//         スケジュール編集のフラグをbool値にして検査
+    public function __construct($selected_date, $calendar_size, $schedule_register_flag, $schedule_modify_flag, $schedule_delete_flag, $schedule_start_year, $schedule_start_month, $schedule_start_day, $schedule_start_hour, $schedule_start_minute, $schedule_end_year, $schedule_end_month, $schedule_end_day, $schedule_end_hour, $schedule_end_minute, $schedule_title, $schedule_detail, $view_id) {
+        // スケジュール編集のフラグをbool値にして検査
         $schedule_register_flag = is_null($schedule_register_flag) ? false : true;
         $schedule_modify_flag = is_null($schedule_modify_flag) ? false : true;
         $schedule_delete_flag = is_null($schedule_delete_flag) ? false : true;
-        if (($schedule_register_flag + $schedule_modify_flag + $schedule_delete_flag) > 1){
+        if (($schedule_register_flag + $schedule_modify_flag + $schedule_delete_flag) > 1) {
             $this->setErrorMessage("不正な値です。");
             return;
         } else {
-            $this->modified_flag = ($schedule_register_flag + $schedule_modify_flag + $schedule_delete_flag);            
+            $this->modified_flag = ($schedule_register_flag + $schedule_modify_flag + $schedule_delete_flag);
         }
-
+        if ($this->modified_flag){
+            if (! $this->checkDateTime($schedule_start_year, $schedule_start_month, $schedule_start_day, $schedule_start_hour, $schedule_start_minute) ||
+            ! $this->checkDateTime($schedule_end_year, $schedule_end_month, $schedule_end_day, $schedule_end_hour, $schedule_end_minute)) {
+                $this->modified_flag = false;
+            }
+        }
         
         $this->view_id = $view_id;
         $this->today = explode("-", date("Y-n-d"));
@@ -92,28 +88,58 @@ class CalendarFunction {
         $this->calendar_size = is_null($calendar_size) || ! ctype_digit($calendar_size) ? 3 : $calendar_size;
         $this->connection = new mysqli('localhost', self::DATABASE_USER_NAME, "", self::DATABASE_NAME);
         
-        $this->initialize($schedule_register_flag, $schedule_modify_flag, $schedule_delete_flag,
-           array(
+        $this->initialize($schedule_register_flag, $schedule_modify_flag, $schedule_delete_flag, array(
                 $schedule_start_year,
                 $schedule_start_month,
-                $schedule_start_day
+                $schedule_start_day 
         ), array(
                 $schedule_start_hour,
                 $schedule_start_minute,
-                "00"
+                "00" 
         ), array(
                 $schedule_end_year,
                 $schedule_end_month,
-                $schedule_end_day
+                $schedule_end_day 
         ), array(
                 $schedule_end_hour,
                 $schedule_end_minute,
-                "00"
+                "00" 
         ), $schedule_title, $schedule_detail);
-    
-        if (! is_null($view_id)) $this->fetchScheduleById($view_id);
-    
+        
+        if (! is_null($view_id))
+            $this->fetchScheduleById($view_id);
+        
         $this->connection->close();
+    }
+    
+    /**
+     * 日付と時刻が正しい値であるかチェックする
+     * @param unknown $year
+     * @param unknown $month
+     * @param unknown $day
+     * @param unknown $hour
+     * @param unknown $minute
+     */
+    private function checkDateTime($year, $month, $day, $hour, $minute){
+        if(! checkdate($month, $day, $year)) {
+            $this->setErrorMessage("日付が不正です。");
+            return false;
+        }
+        
+        if($year < 2015 || 2018 < $year) {
+            $this->setErrorMessage("年が不正です。");
+            return false;
+        }
+        
+        if ($hour < 0 || $hour > 23) {
+            $this->setErrorMessage("時が不正です。");
+            return false;
+        }
+        if ($minute < 0 || $minute > 59) {
+            $this->setErrorMessage("分が不正です。");
+            return false;
+        }
+        return true;        
     }
     private $select_all_day_schedule_stmt;
     private $select_end_schedule_stmt;
@@ -131,59 +157,60 @@ class CalendarFunction {
         $this->select_end_schedule_stmt = mysqli_prepare($this->connection, "SELECT my_schedules_id, title, end_time FROM my_schedules where start_time <= ? AND end_time <= ? AND end_time >= ? AND deleted_at is null");
         // day_start, end
         $this->select_day_schedule_stmt = mysqli_prepare($this->connection, "SELECT my_schedules_id, title, start_time, end_time FROM my_schedules where start_time >= ? AND end_time <= ? AND deleted_at is null");
-    
-//         スケジュールの登録
-        if ($schedule_register_flag) {
-            if (empty($schedule_title) || empty($schedule_start_date) || empty($schedule_start_time) || empty($schedule_end_date) || empty($schedule_end_time)){
+        
+        // スケジュールの登録
+        if ($this->modified_flag && $schedule_register_flag) {
+            if (empty($schedule_title) || empty($schedule_start_date) || empty($schedule_start_time) || empty($schedule_end_date) || empty($schedule_end_time)) {
                 $this->setErrorMessage("情報が入力されていません。");
-            } else{
+            } else {
                 $start_time = $this->implodeDateAndTimeArray($schedule_start_date, $schedule_start_time);
                 $end_time = $this->implodeDateAndTimeArray($schedule_end_date, $schedule_end_time);
                 
-                $this->insertSchedule($schedule_title, $schedule_detail, $start_time, $end_time);                
+                $this->insertSchedule($schedule_title, $schedule_detail, $start_time, $end_time);
             }
         }
         
-//         スケジュールの編集
-        if ($schedule_modify_flag) {
-            if (is_null($this->view_id) || empty($schedule_title) || empty($schedule_start_date) || empty($schedule_start_time) || empty($schedule_end_date) || empty($schedule_end_time)){
+        // スケジュールの編集
+        if ($this->modified_flag && $schedule_modify_flag) {
+            if (is_null($this->view_id) || empty($schedule_title) || empty($schedule_start_date) || empty($schedule_start_time) || empty($schedule_end_date) || empty($schedule_end_time)) {
                 $this->setErrorMessage("情報が入力されていません。");
-            } else{
+            } else {
                 $start_time = $this->implodeDateAndTimeArray($schedule_start_date, $schedule_start_time);
-                $end_time = $this->implodeDateAndTimeArray($schedule_end_date, $schedule_end_time);            
+                $end_time = $this->implodeDateAndTimeArray($schedule_end_date, $schedule_end_time);
                 $this->modifySchedule($this->view_id, $schedule_title, $schedule_detail, $start_time, $end_time);
             }
         }
         
-//         スケジュールの削除
-        if($schedule_delete_flag) $this->deleteSchedule($this->view_id);
-    
+        // スケジュールの削除
+        if ($schedule_delete_flag)
+            $this->deleteSchedule($this->view_id);
+        
         $this->start_calendar = date("Y-n", strtotime($this->selected_date . " -" . floor($this->calendar_size / 2) . " month"));
         list($start_year, $start_month) = explode("-", $this->start_calendar);
         $this->end_calendar = date("Y-n", strtotime($this->selected_date . " +" . ceil($this->calendar_size / 2) . " month -1 month"));
         list($end_year, $end_month) = explode("-", $this->end_calendar);
         $this->calendar_array = $this->createCarendarArray($start_year, $start_month, $end_year, $end_month);
-    
+        
         mysqli_stmt_close($this->select_all_day_schedule_stmt);
         mysqli_stmt_close($this->select_start_schedule_stmt);
         mysqli_stmt_close($this->select_end_schedule_stmt);
         mysqli_stmt_close($this->select_day_schedule_stmt);
     }
     
-/**
- * 日付の配列と時間の配列をまとめる
- * @param unknown $date_array
- * @param unknown $time_array
- * @return string
- */
-    private function implodeDateAndTimeArray($date_array, $time_array){
+    /**
+     * 日付の配列と時間の配列をまとめる
+     * 
+     * @param unknown $date_array            
+     * @param unknown $time_array            
+     * @return string
+     */
+    private function implodeDateAndTimeArray($date_array, $time_array) {
         $date = implode("-", $date_array);
         $time = implode(":", $time_array);
-    
-        return $date." ".$time;
+        
+        return $date . " " . $time;
     }
     
-
     /**
      * 今日の年かどうか調べる
      *
@@ -244,7 +271,7 @@ class CalendarFunction {
      */
     private function insertSchedule($title, $detail, $start_time, $end_time) {
         if (strtotime($start_time) >= strtotime($end_time)) {
-            $this->setErrorMessage("登録時間がおかしいです。");            
+            $this->setErrorMessage("登録時間がおかしいです。");
             return;
         }
         
@@ -254,32 +281,34 @@ class CalendarFunction {
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
         } catch ( mysqli_sql_exception $e ) {
-            $this->setErrorMessage("SQLエラー：".$e->getMessage());
+            $this->setErrorMessage("SQLエラー：" . $e->getMessage());
         }
     }
     
     /**
      * 予定を削除する
-     * @param unknown $id
+     * 
+     * @param unknown $id            
      */
-    private function deleteSchedule($id){
+    private function deleteSchedule($id) {
         try {
             $stmt = mysqli_prepare($this->connection, "UPDATE my_schedules SET deleted_at = now() where my_schedules_id = ?");
             mysqli_stmt_bind_param($stmt, 's', $id);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
-        } catch ( mysqli_sql_exception $e ){
-            $this->setErrorMessage("SQLエラー：".$e->getMessage());
+        } catch ( mysqli_sql_exception $e ) {
+            $this->setErrorMessage("SQLエラー：" . $e->getMessage());
         }
     }
     
     /**
      * 予定を編集する
-     * @param unknown $id
-     * @param unknown $title
-     * @param unknown $detail
-     * @param unknown $start_time
-     * @param unknown $end_time
+     * 
+     * @param unknown $id            
+     * @param unknown $title            
+     * @param unknown $detail            
+     * @param unknown $start_time            
+     * @param unknown $end_time            
      */
     private function modifySchedule($id, $title, $detail, $start_time, $end_time) {
         if (strtotime($start_time) >= strtotime($end_time)) {
@@ -291,22 +320,23 @@ class CalendarFunction {
             mysqli_stmt_bind_param($stmt, 'sssss', $title, $detail, $start_time, $end_time, $id);
             mysqli_stmt_execute($stmt);
             mysqli_stmt_close($stmt);
-        } catch ( mysqli_sql_exception $e){
-            $this->setErrorMessage("SQLエラー：".$e->getMessage());
+        } catch ( mysqli_sql_exception $e ) {
+            $this->setErrorMessage("SQLエラー：" . $e->getMessage());
         }
     }
-    
     private $view_schedule;
     /**
      * idからスケジュールの情報を読み込む
-     * @param unknown $id
+     * 
+     * @param unknown $id            
      */
     private function fetchScheduleById($id) {
         $this->view_schedule = array();
         $stmt = mysqli_prepare($this->connection, "SELECT title, detail, start_time, end_time from my_schedules where my_schedules_id=? AND deleted_at is NULL");
         mysqli_stmt_bind_param($stmt, 's', $id);
         try {
-            if (mysqli_stmt_execute($stmt)) mysqli_stmt_bind_result($stmt, $title, $detail, $start_time, $end_time);
+            if (mysqli_stmt_execute($stmt))
+                mysqli_stmt_bind_result($stmt, $title, $detail, $start_time, $end_time);
             mysqli_stmt_fetch($stmt);
             $this->view_schedule["title"] = $title;
             $this->view_schedule["detail"] = $detail;
@@ -329,19 +359,21 @@ class CalendarFunction {
         }
         mysqli_stmt_close($stmt);
     }
-    public function isDeleted($id){
+    public function isDeleted($id) {
         $stmt = mysqli_prepare($this->connection, "SELECT COUNT(*) FROM my_schedules where id=? AND deleted_at is null");
         mysqli_stmt_bind_param($stmt, "s", $id);
         try {
-            if (mysqli_stmt_execute($stmt)) mysqli_stmt_bind_result($stmt, $count);
+            if (mysqli_stmt_execute($stmt))
+                mysqli_stmt_bind_result($stmt, $count);
             mysqli_stmt_fetch($stmt);
             return $count == 0 ? true : false;
-        } catch ( mysqli_sql_exception $e ){
-            $this->setErrorMessage("SQLエラー:".$e->getMessage());
+        } catch ( mysqli_sql_exception $e ) {
+            $this->setErrorMessage("SQLエラー:" . $e->getMessage());
         }
     }
     /**
      * 予定を読み出す状態にあるかどうかを調べる
+     * 
      * @return boolean
      */
     public function isViewMode() {
@@ -356,7 +388,8 @@ class CalendarFunction {
     
     /**
      * datetime型を年、月、日、時、分の配列で返す
-     * @param unknown $str
+     * 
+     * @param unknown $str            
      * @return multitype:unknown Ambigous <>
      */
     private function explodeDatetime($str) {
@@ -769,30 +802,35 @@ class CalendarFunction {
         );
         return $array;
     }
-    
     private $error_message;
     /**
      * エラーメッセージをセットする
-     * @param unknown $str
+     * 
+     * @param unknown $str            
      */
-    private function setErrorMessage($str){
-        if (is_null($this->error_message)) $this->error_message = array();
+    private function setErrorMessage($str) {
+        if (is_null($this->error_message))
+            $this->error_message = array();
         $this->error_message[] = $str;
     }
     /**
      * エラーメッセージを取得する
+     * 
      * @return string
      */
-    public function getErrorMessage(){
+    public function getErrorMessage() {
         $str = "";
-        foreach ($this->error_message as $msg) $str = $str." ".$msg; 
+        foreach($this->error_message as $msg){
+            $str = $str . " " . $msg;
+        }
         return trim($str);
     }
     /**
      * エラーメッセージがあるかどうか調べる
+     * 
      * @return boolean
      */
-    public function isError(){
+    public function isError() {
         return is_null($this->error_message) ? false : true;
     }
 }
