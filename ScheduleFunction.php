@@ -268,18 +268,18 @@ class ScheduleFunction
                 }
                 
                 $start_datetime = new DateTime();
-                $result1 = $start_datetime->setDate($post_data["schedule_start_year"], $post_data["schedule_start_month"], $post_data["schedule_start_day"]);
-                $result2 = $start_datetime->setTime($post_data["schedule_start_hour"], $post_data["schedule_start_minute"]);
-                if ($result1 === false || $result2 === false)
+                $date_result = $start_datetime->setDate($post_data["schedule_start_year"], $post_data["schedule_start_month"], $post_data["schedule_start_day"]);
+                $time_result = $start_datetime->setTime($post_data["schedule_start_hour"], $post_data["schedule_start_minute"]);
+                if ($date_result === false || $time_result === false)
                     throw new Exception("開始日時が不正な値です。");
                 
                 $this->dateTimeCheck($start_datetime);
                 $this->schedule["start"] = $start_datetime;
                 
                 $end_datetime = new DateTime();
-                $result1 = $end_datetime->setDate($post_data["schedule_end_year"], $post_data["schedule_end_month"], $post_data["schedule_end_day"]);
-                $result2 = $end_datetime->setTime($post_data["schedule_end_hour"], $post_data["schedule_end_minute"]);
-                if ($result1 === false || $result2 === false)
+                $date_result = $end_datetime->setDate($post_data["schedule_end_year"], $post_data["schedule_end_month"], $post_data["schedule_end_day"]);
+                $time_result = $end_datetime->setTime($post_data["schedule_end_hour"], $post_data["schedule_end_minute"]);
+                if ($date_result === false || $time_result === false)
                     throw new Exception("終了日時が不正な値です。");
                 
                 $this->dateTimeCheck($end_datetime);
