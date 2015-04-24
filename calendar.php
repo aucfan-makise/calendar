@@ -1,6 +1,7 @@
 <?php 
     require_once "CalendarFunction.php";
 
+    $week_day_name_array = CalendarFunction::getWeekDayNameArray();
     $calendar_function = new CalendarFunction($_GET, $_POST);
 ?>
 <!DOCTYPE html>
@@ -25,7 +26,13 @@
                     <option value="<?php echo $key; ?>"<?php echo $calendar_function->isSelectedCalendar($key) ? " selected" : ""; ?>><?php echo $value; ?></option>
                     <?php endforeach; ?>
                 </select>
-                <input type="submit" value="select">
+            週の始まり
+            <select name="start_week_day">
+                <?php foreach ($week_day_name_array as $key => $value): ?>
+                    <option value="<?php echo $key; ?>"<?php echo $calendar_function->isStartWeekDay($key) ? " selected" : ""; ?>><?php echo $value; ?></option>
+                <?php endforeach; ?>
+            </select>
+            <input type="submit" value="select">
             </p>
             <p>
             表示するカレンダーの数
@@ -40,6 +47,7 @@
                 $year = array_search($year_array, $calendar_function->getCalendarArray());
                     foreach ($year_array as $month_array):
                         $month = array_search($month_array, $year_array);
+                        $calendar_datetime = new DateTime($year."-".$month);
                         if ($month_array["in_range"] === true):
                         if ($calendar_num % 3 == 0 && $calendar_num != 0): ?>
             </tr>
@@ -48,26 +56,26 @@
                 <td valign="top"><table class="calendar_table">
                     <tr>
                         <td class="calendar_table_title" colspan="7">
-                                <?php echo $year; ?>年<?php echo $month; ?>月
+                                <?php echo $calendar_datetime->format('Y年n月')?>
                         </td>
                     </tr>
                     <tr class="calendar_week_row">
-                        <td class="calendar_week_column">Sun</td>
-        				<td class="calendar_week_column">Mon</td>
-        				<td class="calendar_week_column">Tue</td>
-        				<td class="calendar_week_column">Wed</td>
-        				<td class="calendar_week_column">Thu</td>
-        				<td class="calendar_week_column">Fri</td>
-        				<td class="calendar_week_column">Sat</td>
+                        <?php foreach (range($calendar_function->getStartWeekDay(), 6) as $week_day_num): ?>
+                            <td class="calendar_week_column"><?php echo $week_day_name_array[$week_day_num]; ?></td>
+                        <?php endforeach; ?>
+                        <?php if ($calendar_function->getStartWeekDay() != 0): ?>
+                            <?php foreach (range(0, $calendar_function->getStartWeekDay() - 1) as $week_day_num): ?>
+                                <td class="calendar_week_column"><?php echo $week_day_name_array["$week_day_num"]; ?></td>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </tr>
-                        <?php $printing_calendar = $calendar_function->getMonthCalendarArray($year, $month);
-                        foreach (($calendar_function->getMonthCalendarArray($year, $month)) as $day):
-                            if ($day["week_day"] == 0): ?>
+                        <?php foreach (($calendar_function->getMonthCalendarArray($calendar_datetime)) as $day):
+                            if ($day["week_day"] == $calendar_function->getStartWeekDay()): ?>
                             <tr>
                             <?php endif; ?>
                                 <td>
                                     <div class=<?php echo $day["div_class"]; ?>>
-                                        <a href="schedule_edit.php?selected_date=<?php echo $calendar_function->getSelectedCalendar()."-".$day["day"]; ?>"></a>
+                                        <a href="schedule_edit.php?selected_date=<?php echo $day["datetime"]->format('Y-n-').$day["day"]; ?>"></a>
                                         <div>                                        
                                             <?php echo $day["day"];
                                             echo CalendarFunction::isHoliday($day) ? " ".CalendarFunction::getHolidayName($day) : ""; ?>
@@ -95,7 +103,7 @@
                                         <?php endif; ?>
                                     </div>
                                 </td>
-                                <?php if ($day["week_day"] == 6): ?>
+                                <?php if ($day["week_day"] == ($calendar_function->getStartWeekDay() + 6) % 7): ?>
                             </tr>
                                 <?php endif; ?>
                         <?php endforeach; ?>

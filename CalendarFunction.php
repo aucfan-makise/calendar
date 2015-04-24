@@ -17,6 +17,18 @@ class CalendarFunction
         "public_holiday" => "calendar_public_holiday_div"
     );
 
+    private static $week_day_array = array(
+        0 => Sun,
+        1 => Mon,
+        2 => Tue,
+        3 => Wed,
+        4 => Thu,
+        5 => Fri,
+        6 => Sat
+    );
+
+    private $startWeekDay = 0;
+
     private $todays_datetime;
 
     private $todays_date_array;
@@ -66,6 +78,39 @@ class CalendarFunction
     }
 
     /**
+     * 週の名前と数字の配列を返す
+     * @public
+     * 
+     * @return multitype:string
+     */
+    public static function getWeekDayNameArray()
+    {
+        return self::$week_day_array;
+    }
+
+    /**
+     * 週初めの曜日かどうか調べる
+     * 
+     * @param string $week_day            
+     * @return boolean
+     */
+    public function isStartWeekDay($week_day)
+    {
+        return $this->startWeekDay == $week_day ? true : false;
+    }
+
+    /**
+     * 週の初めの曜日を返す
+     * 
+     * @access public
+     * @return Ambigous <number, array>
+     */
+    public function getStartWeekDay()
+    {
+        return $this->startWeekDay;
+    }
+
+    /**
      *
      * @access public
      * @param array $get_data            
@@ -73,7 +118,7 @@ class CalendarFunction
      */
     public function __construct($get_data = array(), $post_data = array())
     {
-        $this->schedule_function = new ScheduleFunction($post_data);
+        $this->schedule_function = new ScheduleFunction($get_data, $post_data);
         $this->view_id = $get_data["view_id"];
         $this->calendar_size = is_null($calendar_size) || ! ctype_digit($calendar_size) ? 3 : $calendar_size;
         
@@ -88,20 +133,47 @@ class CalendarFunction
      */
     private function initialize($get_data)
     {
-        $calendar_size = $get_data["calendar_size"];
+        $this->checkData($get_data);
+        
         $this->todays_datetime = new DateTime('NOW');
         $this->todays_date_array = date_parse($this->todays_datetime->format('Y-n-j G:i'));
         $this->selected_date_datetime = new DateTime($get_data["selected_date"]);
         $this->start_calendar = date("Y-n", strtotime($this->selected_date_datetime->format('Y-n') . " -" . floor($this->calendar_size / 2) . " month"));
-        list ($start_year, $start_month) = explode("-", $this->start_calendar);
+        $start_datetime = new DateTime($this->start_calendar);
         $this->end_calendar = date("Y-n", strtotime($this->selected_date_datetime->format('Y-n') . " +" . ceil($this->calendar_size / 2) . " month -1 month"));
-        list ($end_year, $end_month) = explode("-", $this->end_calendar);
-        $this->calendar_array = $this->createCarendarArray($start_year, $start_month, $end_year, $end_month);
+        $end_datetime = new DateTime($this->end_calendar);
+        $this->calendar_array = $this->createCarendarArray($start_datetime, $end_datetime);
+    }
+
+    /**
+     * 入力されたデータのチェック
+     * 
+     * @access private
+     * @param array $get_data            
+     * @throws Exception
+     */
+    private function checkData($get_data)
+    {
+        try {
+            if ($get_data["start_week_day"] > 6 || $get_data < 0) {
+                $this->startWeekDay = 0;
+                throw new Exception("開始の曜日の選択が不正です。");
+            }
+            if (isset($get_data["start_week_day"])) {
+                $this->startWeekDay = $get_data["start_week_day"];
+            }
+            if ($get_data["calendar_size"] > 9 || $get_data["calendar_size"] < 0) {
+                throw new Exception("カレンダーのサイズが大きすぎるか小さすぎます。");
+            }
+        } catch (Exception $e) {
+            $this->setErrorMessage("パラメータの値が不正です。" . $e->getMessage());
+        }
     }
 
     /**
      * 今日の年かどうか調べる
      *
+     * @access public
      * @param string $year            
      * @return boolean
      */
@@ -113,6 +185,7 @@ class CalendarFunction
     /**
      * 今日の月かどうか調べる
      *
+     * @access public
      * @param string $month            
      * @return boolean
      */
@@ -124,6 +197,7 @@ class CalendarFunction
     /**
      * 今日の日かどうか調べる
      *
+     * @access public
      * @param string $day            
      * @return boolean
      */
@@ -135,6 +209,7 @@ class CalendarFunction
     /**
      * 今の時間かどうか調べる
      *
+     * @access public
      * @param string $hour            
      * @return boolean
      */
@@ -146,6 +221,7 @@ class CalendarFunction
     /**
      * 今の分かどうか調べる
      *
+     * @access public
      * @param string $minute            
      * @return boolean
      */
@@ -192,23 +268,10 @@ class CalendarFunction
     }
 
     /**
-     * 今日かどうかを調べる
-     *
-     * @access public
-     */
-    public function isToday($year, $month, $day)
-    {
-        return strtotime(implode("-", array(
-            $year,
-            $month,
-            $day
-        ))) === strtotime($this->todays_datetime->format("Y-n-j")) ? true : false;
-    }
-
-    /**
      * 祝日かどうかを調べる
      *
      * @access public
+     * @param array $day            
      */
     public static function isHoliday($day)
     {
@@ -219,6 +282,7 @@ class CalendarFunction
      * 祝日名を返す
      *
      * @access public
+     * @param array $day            
      */
     public static function getHolidayName($day)
     {
@@ -227,6 +291,9 @@ class CalendarFunction
 
     /**
      * 土曜日かどうかを調べる
+     *
+     * @access public
+     * @param array $day            
      */
     public static function isSaturday($day)
     {
@@ -235,6 +302,9 @@ class CalendarFunction
 
     /**
      * 日曜日かどうかを調べる
+     *
+     * @access public
+     * @param array $day            
      */
     public static function isSunday($day)
     {
@@ -246,18 +316,16 @@ class CalendarFunction
      * xmlをパースしたものを返す
      *
      * @access private
-     * @param string $start_year            
-     * @param string $start_month            
-     * @param string $end_year            
-     * @param string $end_month            
+     * @param array $start_datetime_array            
+     * @param array $end_datetime_array            
      * @return SimpleXMLElement
      */
-    private function getPublicHolidayData($start_year, $start_month, $end_year, $end_month)
+    private function getPublicHolidayData($start_datetime_array, $end_datetime_array)
     {
-        $year_start_option = Properties::YEAR_START_OPTION_NAME . "=" . $start_year;
-        $year_end_option = Properties::YEAR_END_OPTION_NAME . "=" . $end_year;
-        $month_start_option = Properties::MONTH_START_OPTION_NAME . "=" . $start_month;
-        $month_end_option = Properties::MONTH_END_OPTION_NAME . "=" . $end_month;
+        $year_start_option = Properties::YEAR_START_OPTION_NAME . "=" . $start_datetime_array["year"];
+        $year_end_option = Properties::YEAR_END_OPTION_NAME . "=" . $end_datetime_array["year"];
+        $month_start_option = Properties::MONTH_START_OPTION_NAME . "=" . $start_datetime_array["month"];
+        $month_end_option = Properties::MONTH_END_OPTION_NAME . "=" . $end_datetime_array["month"];
         $url = Properties::SERVER . "?" . $year_start_option . "&" . $month_start_option . "&" . $year_end_option . "&" . $month_end_option . "&" . Properties::FIXED_OPTION;
         $res = null;
         try {
@@ -318,37 +386,34 @@ class CalendarFunction
      * "..." =>
      *
      * @access private
-     * @param string $start_year            
-     * @param string $start_month            
-     * @param string $end_year            
-     * @param string $end_month            
+     * @param DateTime $start_date_array            
+     * @param DateTime $end_date_array            
      * @return multitype:NULL multitype:multitype:mixed boolean multitype:unknown
      */
-    private function createCarendarArray($start_year, $start_month, $end_year, $end_month)
+    private function createCarendarArray($start_datetime, $end_datetime)
     {
         $array = array();
         // 指定された最初の月と最後の月の範囲を広げる
-        $start = date("Y-n", strtotime($start_year . "-" . $start_month . " - 1 month"));
-        $start_datetime = new DateTime($start);
-        list ($start_year, $start_month) = explode("-", $start);
-        $end = date("Y-n", strtotime($end_year . "-" . $end_month . " + 1 month"));
-        $end_datetime = new datetime($end);
-        list ($end_year, $end_month) = explode("-", $end);
+        $interval = new DateInterval('P1M');
+        $start_datetime->sub($interval);
+        $start_datetime_array = date_parse($start_datetime->format('Y-n'));
+        $end_datetime->add($interval);
+        $end_datetime_array = date_parse($end_datetime->format('Y-n'));
         
-        $this->public_holiday_array = $this->getPublicHolidayData($start_year, $start_month, $end_year, $end_month);
+        $this->public_holiday_array = $this->getPublicHolidayData($start_datetime_array, $end_datetime_array);
         $this->auction_topic_array = $this->getAucfanTopicData();
         
         $this->schedule_function->fetchSchedule($start_datetime, $end_datetime);
         $this->schedules_array = $this->schedule_function->getSchedulesArray();
-        for ($year = $start_year; $year <= $end_year; ++ $year) {
-            if ($year == $start_year && $year == $end_year) {
-                $array[$year] = $this->createYearCarendarArray($year, $start_month, $end_month);
-            } elseif ($year == $start_year && $year < $end_year) {
-                $array[$year] = $this->createYearCarendarArray($year, $start_month, 12);
-            } elseif ($year > $start_year && $year < $end_year) {
+        for ($year = $start_datetime_array["year"]; $year <= $end_datetime_array["year"]; ++ $year) {
+            if ($year == $start_datetime_array["year"] && $year == $end_datetime_array["year"]) {
+                $array[$year] = $this->createYearCarendarArray($year, $start_datetime_array["month"], $end_datetime_array["month"]);
+            } elseif ($year == $start_datetime_array["year"] && $year < $end_datetime_array["year"]) {
+                $array[$year] = $this->createYearCarendarArray($year, $start_datetime_array["month"], 12);
+            } elseif ($year > $start_datetime_array["year"] && $year < $end_datetime_array["year"]) {
                 $array[$year] = $this->createYearCarendarArray($year, 1, 12);
-            } elseif ($year > $start_year && $year == $end_year) {
-                $array[$year] = $this->createYearCarendarArray($year, 1, $end_month);
+            } elseif ($year > $start_datetime_array["year"] && $year == $end_datetime_array["year"]) {
+                $array[$year] = $this->createYearCarendarArray($year, 1, $end_datetime_array["month"]);
             }
         }
         
@@ -430,33 +495,49 @@ class CalendarFunction
     /**
      * 一月の表示用のカレンダーの配列を返す
      *
-     * @param string $year            
-     * @param string $month            
+     * @param DateTime $calendar_datetime            
      * @return multitype:NULL unknown
      */
-    public function getMonthCalendarArray($year, $month)
+    public function getMonthCalendarArray($calendar_datetime)
     {
         $array = array();
+        $calendar_datetime_array = date_parse($calendar_datetime->format('Y-n'));
+        
+        $interval = new DateInterval('P1M');
+        
+        $before_month_datetime = clone $calendar_datetime;
+        $before_month_datetime->sub($interval);
+        $before_month_datetime_array = date_parse($before_month_datetime->format('Y-n'));
+        
+        $next_month_datetime = clone $calendar_datetime;
+        $next_month_datetime->add($interval);
+        $next_month_datetime_array = date_parse($next_month_datetime->format('Y-n'));
+        
         // 前月
-        if ($this->calendar_array[$year][$month][1]["week_day"] != 0) {
-            $before_month = $this->getBeforeMonth($year . "-" . $month);
-            $before_month_end_day = date("t", strtotime($before_month["year"] . "-" . $before_month["month"]));
-            $before_month_start_day = $before_month_end_day - $this->calendar_array[$year][$month][1]["week_day"] + 1;
+        if ($this->calendar_array[$calendar_datetime_array["year"]][$calendar_datetime_array["month"]][1]["week_day"] != $this->startWeekDay) {
+            $before_month_end_day = cal_days_in_month(CAL_GREGORIAN, $before_month_datetime_array["month"], $before_month_datetime_array["year"]);
+            $before_month_start_day = $before_month_end_day - ($this->calendar_array[$calendar_datetime_array["year"]][$calendar_datetime_array["month"]][1]["week_day"] + 7 - $this->startWeekDay) % 7 + 1;
             foreach (range($before_month_start_day, $before_month_end_day) as $day) {
-                $array[] = $this->calendar_array[$before_month["year"]][$before_month["month"]][$day];
+                $input = $this->calendar_array[$before_month_datetime_array["year"]][$before_month_datetime_array["month"]][$day];
+                $input["datetime"] = $before_month_datetime;
+                $array[] = $input;
             }
         }
         // 今月
-        foreach ($this->calendar_array[$year][$month] as $key => $value) {
-            if (is_integer($key))
-                $array[] = $value;
+        foreach ($this->calendar_array[$calendar_datetime_array["year"]][$calendar_datetime_array["month"]] as $key => $value) {
+            if (is_integer($key)) {
+                $input = $value;
+                $input["datetime"] = $calendar_datetime;
+                $array[] = $input;
+            }
         }
         // 次月
-        if ($this->calendar_array[$year][$month]["last_day"]["week_day"] != 6) {
-            $next_month = $this->getNextMonth($year . "-" . $month);
-            $next_month_end_day = 6 - $this->calendar_array[$year][$month]["last_day"]["week_day"];
+        if ($this->calendar_array[$next_month_datetime_array["year"]][$next_month_datetime_array["month"]][1]["week_day"] != $this->startWeekDay) {
+            $next_month_end_day = 6 - $this->calendar_array[$calendar_datetime_array["year"]][$calendar_datetime_array["month"]]["last_day"]["week_day"] + $this->startWeekDay;
             foreach (range(1, $next_month_end_day) as $day) {
-                $array[] = $this->calendar_array[$next_month["year"]][$next_month["month"]][$day];
+                $input = $this->calendar_array[$next_month_datetime_array["year"]][$next_month_datetime_array["month"]][$day];
+                $input["datetime"] = $next_month_datetime;
+                $array[] = $input;
             }
         }
         
@@ -490,57 +571,6 @@ class CalendarFunction
         for ($i = - 10; $i <= 10; ++ $i) {
             $array[date("Y-n", strtotime($year_month . " " . $i . " month"))] = date("Y年n月", strtotime($year_month . " " . $i . " month"));
         }
-        return $array;
-    }
-
-    /**
-     * 最後の日にちを取得
-     *
-     * @param unknown $date            
-     * @return string
-     */
-    private static function getLastDay($date)
-    {
-        $next_month = date("Y-m", strtotime($date . " +1 month"));
-        return date("d", strtotime($next_month . " -1 day"));
-    }
-
-    /**
-     * 引数はY-n
-     * 1ヶ月先の年と月を連想配列で返す
-     * year => , month =>
-     *
-     * @access public
-     * @param string $date            
-     * @return multitype:unknown multitype:
-     */
-    public static function getNextMonth($date)
-    {
-        $next_date = date("Y-n", strtotime($date . " +1 month"));
-        list ($year, $month) = explode("-", $next_date);
-        $array = array(
-            "year" => $year,
-            "month" => $month
-        );
-        return $array;
-    }
-
-    /**
-     * 引数はY-n
-     * 1ヶ月前の年と月を連想配列で返す
-     *
-     * @access public
-     * @param string $date            
-     * @return multitype:unknown multitype:
-     */
-    public static function getBeforeMonth($date)
-    {
-        $before_date = date("Y-n", strtotime($date . " -1 month"));
-        list ($year, $month) = explode("-", $before_date);
-        $array = array(
-            "year" => $year,
-            "month" => $month
-        );
         return $array;
     }
 

@@ -9,44 +9,165 @@ class ScheduleFunction
 
     private $connection;
 
-    private $schedule;
-
     private $schedules_array = array();
+    
+    // スケジュールの登録編集関連
+    private $schedule;
 
     private $modify_mode = array(
         "register" => false,
         "modify" => false,
         "delete" => false
     );
+    
+    // api関連
+    private $api_start_datetime;
 
-    public function __construct($post_data)
+    private $api_end_datetime;
+
+    /**
+     *
+     * @param array $get_data            
+     * @param array $post_data            
+     */
+    public function __construct(array $get_data, array $post_data = null)
     {
-        $this->initialize($post_data);
+        if (! is_null($post_data)) {
+            $this->scheduleEditInitialize($post_data);
+        } elseif (! is_null($get_data)) {
+            $this->apiInitialize($get_data);
+        }
     }
 
+    /**
+     * データベースに接続する
+     */
+    private function databaseConnect()
+    {
+        $this->connection = new mysqli('localhost', Properties::DATABASE_USER_NAME, "", Properties::DATABASE_NAME);
+    }
+
+    /**
+     * データベースを閉じる
+     */
     public function __destruct()
     {
         $this->connection->close();
     }
 
     /**
-     *
+     * api関連のもの
+     * 
+     * @access private
+     * @param array $get_data            
+     */
+    private function apiInitialize(array $get_data)
+    {
+        $this->getDataCheck($get_data);
+        $this->databaseConnect();
+        $this->fetchSchedule($this->api_start_datetime, $this->api_end_datetime);
+    }
+
+    /**
+     * $_GETのチェック
+     * 
+     * @access private
+     * @param array $get_data            
+     * @throws Exception
+     */
+    private function getDataCheck(array $get_data)
+    {
+        try {
+            $this->api_start_datetime = new DateTime($get_data["schedule_start"]);
+            $this->api_end_datetime = new DateTime($get_data["schedule_end"]);
+            
+            if ($this->api_start_datetime > $this->api_end_datetime)
+                throw new Exception();
+        } catch (Exception $e) {
+            $this->setErrorMessage("パラメータが不正です。日付が正しくありません" . $e->getMessage());
+        }
+    }
+
+    /**
+     * スケジュールの編集に関するもの
+     * 
      * @access private
      * @param array $post_data            
      */
-    private function initialize($post_data)
+    private function scheduleEditInitialize(array $post_data)
     {
-        if (! is_null($post_data)) {
-            $this->dataCheck($post_data);
-            $this->connection = new mysqli('localhost', Properties::DATABASE_USER_NAME, "", Properties::DATABASE_NAME);
-            
-            // スケジュールの登録
-            if ($this->modify_mode["register"]) {
-                $this->insertSchedule();
-            } elseif ($this->modify_mode["delete"]) {
-                $this->deleteSchedule();
-            } elseif ($this->modify_mode["modify"]) {
-                $this->modifySchedule();
+        $this->postDataCheck($post_data);
+        $this->databaseConnect();
+        
+        // スケジュールの登録
+        if ($this->modify_mode["register"]) {
+            $this->insertSchedule();
+        } elseif ($this->modify_mode["delete"]) {
+            $this->deleteSchedule();
+        } elseif ($this->modify_mode["modify"]) {
+            $this->modifySchedule();
+        }
+    }
+
+    /**
+     * 受け取った値のチェックをする
+     *
+     * @param array $post_data            
+     * @throws Exception
+     */
+    private function postDataCheck(array $post_data)
+    {
+        foreach ($post_data as $data) {
+            try {
+                $this->schedule["detail"] = $post_data["schedule_detail"];
+                
+                // 値があるべきものはあるかどうかをチェック
+                foreach ($post_data as $key => $value) {
+                    if (empty($value) && $key != "schedule_detail")
+                        throw new Exception($key . "の値がありません。");
+                }
+                $this->schedule["title"] = $post_data["schedule_title"];
+                if (isset($post_data["register"]))
+                    $this->modify_mode["register"] = true;
+                if (isset($post_data["modify"]))
+                    $this->modify_mode["modify"] = true;
+                if (isset($post_data["delete"]))
+                    $this->modify_mode["delete"] = true;
+                
+                if (isset($post_data["view_id"]))
+                    $this->schedule["view_id"] = $post_data["view_id"];
+                    
+                    // モードのチェック
+                if (! (($this->modify_mode["register"] xor $this->modify_mode["modify"]) xor $this->modify_mode["delete"])) {
+                    throw new Exception("モードが変です。");
+                }
+                
+                $start_datetime = new DateTime();
+                $date_result = $start_datetime->setDate($post_data["schedule_start_year"], $post_data["schedule_start_month"], $post_data["schedule_start_day"]);
+                $time_result = $start_datetime->setTime($post_data["schedule_start_hour"], $post_data["schedule_start_minute"]);
+                if ($date_result === false || $time_result === false)
+                    throw new Exception("開始日時が不正な値です。");
+                
+                $this->dateTimeCheck($start_datetime);
+                $this->schedule["start"] = $start_datetime;
+                
+                $end_datetime = new DateTime();
+                $date_result = $end_datetime->setDate($post_data["schedule_end_year"], $post_data["schedule_end_month"], $post_data["schedule_end_day"]);
+                $time_result = $end_datetime->setTime($post_data["schedule_end_hour"], $post_data["schedule_end_minute"]);
+                if ($date_result === false || $time_result === false)
+                    throw new Exception("終了日時が不正な値です。");
+                
+                $this->dateTimeCheck($end_datetime);
+                $this->schedule["end"] = $end_datetime;
+                // 開始時間と終了時間の関係をチェック
+                if ($start_datetime >= $end_datetime)
+                    throw new Exception("登録時間がおかしいです。");
+            } catch (Exception $e) {
+                $this->setErrorMessage("不正なパラメータです。" . $e->getMessage());
+                foreach ($this->modify_mode as $key => $value) {
+                    $this->modify_mode[$key] = false;
+                }
+                return;
             }
         }
     }
@@ -58,7 +179,7 @@ class ScheduleFunction
      * @param DateTime $calendar_start_datetime            
      * @param DateTime $calendar_end_datetime            
      */
-    public function fetchSchedule($calendar_start_datetime, $calendar_end_datetime)
+    public function fetchSchedule(DateTime $calendar_start_datetime, DateTime $calendar_end_datetime)
     {
         $calendar_start_datetime = new DateTime($calendar_start_datetime->format('Y-n-') . "1");
         $calendar_start_datetime->setTime(0, 0, 0);
@@ -235,76 +356,13 @@ class ScheduleFunction
     }
 
     /**
-     * 受け取った値のチェックをする
-     *
-     * @param array $post_data            
-     * @throws Exception
-     */
-    private function dataCheck($post_data)
-    {
-        foreach ($post_data as $data) {
-            try {
-                $this->schedule["detail"] = $post_data["schedule_detail"];
-                
-                // 値があるべきものはあるかどうかをチェック
-                foreach ($post_data as $key => $value) {
-                    if (empty($value) && $key != "schedule_detail")
-                        throw new Exception($key . "の値がありません。");
-                }
-                $this->schedule["title"] = $post_data["schedule_title"];
-                if (isset($post_data["register"]))
-                    $this->modify_mode["register"] = true;
-                if (isset($post_data["modify"]))
-                    $this->modify_mode["modify"] = true;
-                if (isset($post_data["delete"]))
-                    $this->modify_mode["delete"] = true;
-                
-                if (isset($post_data["view_id"]))
-                    $this->schedule["view_id"] = $post_data["view_id"];
-                    
-                    // モードのチェック
-                if (! (($this->modify_mode["register"] xor $this->modify_mode["modify"]) xor $this->modify_mode["delete"])) {
-                    throw new Exception("モードが変です。");
-                }
-                
-                $start_datetime = new DateTime();
-                $date_result = $start_datetime->setDate($post_data["schedule_start_year"], $post_data["schedule_start_month"], $post_data["schedule_start_day"]);
-                $time_result = $start_datetime->setTime($post_data["schedule_start_hour"], $post_data["schedule_start_minute"]);
-                if ($date_result === false || $time_result === false)
-                    throw new Exception("開始日時が不正な値です。");
-                
-                $this->dateTimeCheck($start_datetime);
-                $this->schedule["start"] = $start_datetime;
-                
-                $end_datetime = new DateTime();
-                $date_result = $end_datetime->setDate($post_data["schedule_end_year"], $post_data["schedule_end_month"], $post_data["schedule_end_day"]);
-                $time_result = $end_datetime->setTime($post_data["schedule_end_hour"], $post_data["schedule_end_minute"]);
-                if ($date_result === false || $time_result === false)
-                    throw new Exception("終了日時が不正な値です。");
-                
-                $this->dateTimeCheck($end_datetime);
-                $this->schedule["end"] = $end_datetime;
-                // 開始時間と終了時間の関係をチェック
-                if ($start_datetime >= $end_datetime)
-                    throw new Exception("登録時間がおかしいです。");
-            } catch (Exception $e) {
-                $this->setErrorMessage("不正なパラメータです。" . $e->getMessage());
-                foreach ($this->modify_mode as $key => $value) {
-                    $this->modify_mode[$key] = false;
-                }
-                return;
-            }
-        }
-    }
-
-    /**
      * 日付時間のチェックをする
      *
      * @access private
      * @param DateTime $datetime            
      * @throws Exception
      */
-    private function dateTimeCheck($datetime)
+    private function dateTimeCheck(DateTime $datetime)
     {
         $datetime = date_parse($datetime->format("Y-m-d"));
         if ($datetime["year"] < 2015 || 2018 < $datetime["year"])
