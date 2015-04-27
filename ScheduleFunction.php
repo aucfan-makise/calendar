@@ -24,6 +24,8 @@ class ScheduleFunction
     private $api_start_datetime;
 
     private $api_end_datetime;
+    
+    private $api_id;
 
     /**
      *
@@ -65,7 +67,12 @@ class ScheduleFunction
     {
         $this->getDataCheck($get_data);
         $this->databaseConnect();
-        $this->fetchSchedule($this->api_start_datetime, $this->api_end_datetime);
+        
+        if (isset($this->api_id)){
+            $this->getScheduleById();
+        } else {
+            $this->getSchedule($this->api_start_datetime, $this->api_end_datetime);
+        }
     }
 
     /**
@@ -78,11 +85,16 @@ class ScheduleFunction
     private function getDataCheck(array $get_data)
     {
         try {
-            $this->api_start_datetime = new DateTime($get_data["schedule_start"]);
-            $this->api_end_datetime = new DateTime($get_data["schedule_end"]);
-            
-            if ($this->api_start_datetime > $this->api_end_datetime)
-                throw new Exception();
+            if (isset($get_data["id"]) && ctype_digit($get_data["id"])){
+                $this->api_id = $get_data["id"];
+            } else {
+                $this->api_start_datetime = new DateTime($get_data["schedule_start"]);
+                $this->api_end_datetime = new DateTime($get_data["schedule_end"]);
+                
+                if ($this->api_start_datetime > $this->api_end_datetime){
+                    throw new Exception();
+                }
+            }
         } catch (Exception $e) {
             $this->setErrorMessage("パラメータが不正です。日付が正しくありません" . $e->getMessage());
         }
@@ -179,7 +191,7 @@ class ScheduleFunction
      * @param DateTime $calendar_start_datetime            
      * @param DateTime $calendar_end_datetime            
      */
-    public function fetchSchedule(DateTime $calendar_start_datetime, DateTime $calendar_end_datetime)
+    public function getSchedule(DateTime $calendar_start_datetime, DateTime $calendar_end_datetime)
     {
         $calendar_start_datetime = new DateTime($calendar_start_datetime->format('Y-n-') . "1");
         $calendar_start_datetime->setTime(0, 0, 0);
@@ -192,51 +204,80 @@ class ScheduleFunction
         try {
             $stmt = mysqli_prepare($this->connection, "SELECT my_schedules_id, title, detail, start_time, end_time from my_schedules where ((start_time > ? and start_time < ?) or (end_time > ? and end_time < ?)) AND deleted_at is null");
             mysqli_stmt_bind_param($stmt, 'ssss', $start_datetime, $end_datetime, $start_datetime, $end_datetime);
-            
-            if (mysqli_stmt_execute($stmt)) {
-                mysqli_stmt_bind_result($stmt, $id, $title, $detail, $start_time, $end_time);
-                while (mysqli_stmt_fetch($stmt)) {
-                    $schedule_start_datetime = new DateTime($start_time);
-                    $schedule_end_datetime = new DateTime($end_time);
-                    for ($current = new DateTime($schedule_start_datetime->format("Y-m-d")); $current <= $schedule_end_datetime; $current = $current->add(new DateInterval('P1D'))) {
-                        $schedule_array = array(
-                            "title" => $title,
-                            "detail" => $detail
-                        );
-                        $formated_current = $current->format('Y-m-d');
-                        $formated_schedule_start_datetime = $schedule_start_datetime->format('Y-m-d');
-                        $formated_schedule_end_datetime = $schedule_end_datetime->format('Y-m-d');
-                        
-                        if ($formated_current === $formated_schedule_start_datetime && $formated_current === $formated_schedule_end_datetime) {
-                            $schedule_array["start_time"] = $schedule_start_datetime->format('G:i');
-                            $schedule_array["end_time"] = $schedule_end_datetime->format('G:i');
-                            $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
-                            continue;
-                        }
-                        if ($formated_current === $formated_schedule_start_datetime) {
-                            $schedule_array["start_time"] = $schedule_start_datetime->format('G:i');
-                            $schedule_array["end_time"] = "23:59";
-                            $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
-                            continue;
-                        }
-                        if ($formated_current === $formated_schedule_end_datetime) {
-                            $schedule_array["start_time"] = "00:00";
-                            $schedule_array["end_time"] = $schedule_end_datetime->format('G:i');
-                            $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
-                            continue;
-                        }
-                        
-                        $schedule_array["start_time"] = "00:00";
-                        $schedule_array["end_time"] = "23:59";
-                        $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
-                    }
-                }
-            }
-            
-            mysqli_stmt_close($stmt);
+            $this->fetchSchedule($stmt);
         } catch (mysqli_sql_exception $e) {
             $this->setErrorMessage("SQLエラー；" . $e->getMessage());
         }
+        mysqli_stmt_close($stmt);
+    }
+
+    /**
+     * idからスケジュールを読み出す
+     *
+     * @access public
+     * @param string $id
+     * @return multitype:unknown multitype:
+     */
+    public function getScheduleById()
+    {
+        try {
+            $stmt = mysqli_prepare($this->connection, "SELECT my_schedules_id, title, detail, start_time, end_time from my_schedules where my_schedules_id=? AND deleted_at is NULL");
+            mysqli_stmt_bind_param($stmt, 's', $this->api_id);
+            $this->fetchSchedule($stmt);
+        } catch (mysqli_sql_exception $e) {
+            $this->setErrorMessage("SQLのエラー");
+        } catch (Exception $e) {
+            $this->setErrorMessage("スケジュールが取得できませんでした。" . $e->getMessage());
+        }
+        mysqli_stmt_close($stmt);
+    }
+    
+    /**
+     * SQLに問い合わせて得た情報を配列に格納する
+     * @access private
+     * @param mysqli_stmt $stmt
+     */
+    private function fetchSchedule($stmt){
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_bind_result($stmt, $id, $title, $detail, $start_time, $end_time);
+            while (mysqli_stmt_fetch($stmt)) {
+                $schedule_start_datetime = new DateTime($start_time);
+                $schedule_end_datetime = new DateTime($end_time);
+                for ($current = new DateTime($schedule_start_datetime->format("Y-m-d")); $current <= $schedule_end_datetime; $current = $current->add(new DateInterval('P1D'))) {
+                    $schedule_array = array(
+                        "title" => $title,
+                        "detail" => $detail
+                    );
+                    $formated_current = $current->format('Y-m-d');
+                    $formated_schedule_start_datetime = $schedule_start_datetime->format('Y-m-d');
+                    $formated_schedule_end_datetime = $schedule_end_datetime->format('Y-m-d');
+        
+                    if ($formated_current === $formated_schedule_start_datetime && $formated_current === $formated_schedule_end_datetime) {
+                        $schedule_array["start_time"] = $schedule_start_datetime->format('G:i');
+                        $schedule_array["end_time"] = $schedule_end_datetime->format('G:i');
+                        $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
+                        continue;
+                    }
+                    if ($formated_current === $formated_schedule_start_datetime) {
+                        $schedule_array["start_time"] = $schedule_start_datetime->format('G:i');
+                        $schedule_array["end_time"] = "23:59";
+                        $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
+                        continue;
+                    }
+                    if ($formated_current === $formated_schedule_end_datetime) {
+                        $schedule_array["start_time"] = "00:00";
+                        $schedule_array["end_time"] = $schedule_end_datetime->format('G:i');
+                        $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
+                        continue;
+                    }
+        
+                    $schedule_array["start_time"] = "00:00";
+                    $schedule_array["end_time"] = "23:59";
+                    $this->schedules_array = $this->createDateArray(date_parse($current->format('Y-n-j')), $this->schedules_array, $id, $schedule_array);
+                }
+            }
+        }
+        
     }
 
     /**
@@ -272,37 +313,6 @@ class ScheduleFunction
         return $date_array;
     }
 
-    /**
-     * idからスケジュールを読み出す
-     *
-     * @param string $id            
-     * @return multitype:unknown multitype:
-     */
-    public function fetchScheduleById($id)
-    {
-        $schedule = array();
-        $stmt = mysqli_prepare($this->connection, "SELECT title, detail, start_time, end_time from my_schedules where my_schedules_id=? AND deleted_at is NULL");
-        mysqli_stmt_bind_param($stmt, 's', $id);
-        try {
-            if (mysqli_stmt_execute($stmt)) {
-                mysqli_stmt_bind_result($stmt, $title, $detail, $start_time, $end_time);
-            } else {
-                throw new Exception();
-            }
-            if (is_null(mysqli_stmt_fetch($stmt)))
-                throw new Exception("そんなスケジュールはありません。");
-            $schedule["title"] = $title;
-            $schedule["detail"] = $detail;
-            $schedule["start_time"] = date_parse($start_time);
-            $schedule["end_time"] = date_parse($end_time);
-        } catch (mysqli_sql_exception $e) {
-            $this->setErrorMessage("SQLのエラー");
-        } catch (Exception $e) {
-            $this->setErrorMessage("スケジュールが取得できませんでした。" . $e->getMessage());
-        }
-        mysqli_stmt_close($stmt);
-        return $schedule;
-    }
 
     /**
      * 予定を登録する

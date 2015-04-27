@@ -87,7 +87,7 @@
                                         <?php endforeach; ?>
                                         <?php if (! is_null($day["schedules"])): ?>
                                             <?php foreach ($day["schedules"] as $id => $schedule_array): ?>
-                                                <a href="schedule_edit.php?view_id=<?php echo $id; ?>">
+                                                <a href="schedule_edit.php?selected_date=<?php echo $calendar_function->getSelectedCalendar(); ?>&view_id=<?php echo $id; ?>">
                                                 <?php if ($schedule_array["start_time"] == "00:00" && $schedule_array["end_time"] == "23:59"): ?>
                                                     <?php echo $schedule_array["title"]; ?> 
                                                 <?php elseif ($schedule_array["end_time"] == "23:59"): ?>

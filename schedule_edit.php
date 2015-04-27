@@ -1,7 +1,6 @@
 <?php
 require_once 'CalendarFunction.php';
 require_once 'ScheduleFunction.php';
-
 $calendar_function = new CalendarFunction($_GET);
 $schedule_function = new ScheduleFunction($_POST);
 ?>
@@ -11,7 +10,7 @@ $schedule_function = new ScheduleFunction($_POST);
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     </head>
     <body>
-        <form method="post" action="calendar.php">
+        <form method="post" action="calendar.php?selected_date=<?php echo $calendar_function->getSelectedCalendar(); ?>">
             <?php if ($calendar_function->isViewMode()): ?>
                 <?php $view_schedule = $schedule_function->fetchScheduleById($calendar_function->getViewId()); ?>
             <?php endif; ?>

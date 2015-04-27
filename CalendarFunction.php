@@ -44,7 +44,7 @@ class CalendarFunction
 
     private $end_calendar;
     // 表示するカレンダーの数
-    private $calendar_size;
+    private $calendar_size = 3;
     
     // 祝日のデータ
     private $public_holiday_array;
@@ -120,7 +120,6 @@ class CalendarFunction
     {
         $this->schedule_function = new ScheduleFunction($get_data, $post_data);
         $this->view_id = $get_data["view_id"];
-        $this->calendar_size = is_null($calendar_size) || ! ctype_digit($calendar_size) ? 3 : $calendar_size;
         
         $this->initialize($get_data);
     }
@@ -162,8 +161,12 @@ class CalendarFunction
             if (isset($get_data["start_week_day"])) {
                 $this->startWeekDay = $get_data["start_week_day"];
             }
-            if ($get_data["calendar_size"] > 9 || $get_data["calendar_size"] < 0) {
-                throw new Exception("カレンダーのサイズが大きすぎるか小さすぎます。");
+
+            if (isset($get_data["calendar_size"])){
+                if ($get_data["calendar_size"] > 9 || $get_data["calendar_size"] < 0) {
+                    throw new Exception("カレンダーのサイズが大きすぎるか小さすぎます。");
+                }
+                $this->calendar_size = $get_data["calendar_size"];                
             }
         } catch (Exception $e) {
             $this->setErrorMessage("パラメータの値が不正です。" . $e->getMessage());
@@ -403,7 +406,7 @@ class CalendarFunction
         $this->public_holiday_array = $this->getPublicHolidayData($start_datetime_array, $end_datetime_array);
         $this->auction_topic_array = $this->getAucfanTopicData();
         
-        $this->schedule_function->fetchSchedule($start_datetime, $end_datetime);
+        $this->schedule_function->getSchedule($start_datetime, $end_datetime);
         $this->schedules_array = $this->schedule_function->getSchedulesArray();
         for ($year = $start_datetime_array["year"]; $year <= $end_datetime_array["year"]; ++ $year) {
             if ($year == $start_datetime_array["year"] && $year == $end_datetime_array["year"]) {
