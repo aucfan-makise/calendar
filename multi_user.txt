@@ -1,27 +1,18 @@
 複数ユーザが使えるようにするために必要なこと
 ・アカウント登録機能
-	−パスワードの暗号化(openssl)
+	−パスワードの暗号化(md5ハッシュ値)
 ・ログイン・ログアウト機能
 	-セッション
 ・アカウント設定変更機能
 ・データベースの改良
 
 データベース設計
-データベース名 schedule
-
-テーブル名 user_names
-カラム名	型
-user_id	int	auto_increment
-user_name	varchar(255)	unique	not null
-
-テーブル名 user_passwords
-カラム名	型
-user_id	int	unique	not null
-user_passwd	varchar(255)	not null
+データベース名 calendar
 
 テーブル名 user_accounts
-カラム名	型
-user_id	int	unique	not null
+user_id	int	auto_increment
+user_name	varchar(255)	unique	not null
+user_passwd	varchar(255)	not null
 created_at	datetime	not null
 update_at	datetime	not null
 deleted_at	datetime	
