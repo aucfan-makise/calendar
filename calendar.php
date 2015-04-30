@@ -2,6 +2,7 @@
     require_once "CalendarFunction.php";
     
     session_start();
+    session_regenerate_id(true);
     $week_day_name_array = CalendarFunction::getWeekDayNameArray();
     $calendar_function = new CalendarFunction($_SESSION, $_GET, $_POST);
 ?>

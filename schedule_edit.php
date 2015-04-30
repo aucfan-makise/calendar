@@ -3,6 +3,7 @@ require_once 'CalendarFunction.php';
 require_once 'ScheduleFunction.php';
 
 session_start();
+session_regenerate_id(true);
 
 $calendar_function = new CalendarFunction($_SESSION, $_GET);
 $schedule_function = new ScheduleFunction($_SESSION, $_GET, $_POST);

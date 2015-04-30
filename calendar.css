@@ -1,5 +1,7 @@
 .calendar_table {
-	border-collapse: collapse;
+	border-collapse: separate;
+	border-spacing: 0;
+	border-right: 1px solid;
 }
 
 .calendar_table td {
@@ -14,6 +16,8 @@
 }
 
 .calendar_table_title {
+	border-left: 1px solid;
+	border-top:1px solid;
 	vertical-align: bottom;
 	text-align: center;
 	background-color: green;
@@ -22,22 +26,20 @@
 tr.calendar_week_row {
 	height: 30;
 	background-color: #BDBDBD;
+	border-bottom : 1px solid;
+	border-top : 1px solid;
 }
 
 td.calendar_week_column {
 	width: 60px;
-	margin: -1px;
-	padding: -1px;
-	border: solid 1px;
+	border-left : solid 1px;
 	text-align: center;
 	vertical-align: middle;
 }
 
 .calendar_date_div{
 	position: relative;
-	border-top : solid 1px;
 	border-left : solid 1px;
-	border-right : solid 1px;
 	height: 15px;
 	font-size: 9px;
 }
@@ -51,9 +53,7 @@ td.calendar_week_column {
 }
 .calendar_sunday_div{
 	position: relative;
-	border-top : solid 1px;
 	border-left : solid 1px;
-	border-right : solid 1px;	
 	height: 15px;
 	background-color: #FC8F8F;
 	font-size: 9px;
@@ -68,9 +68,7 @@ td.calendar_week_column {
 }
 .calendar_saturday_div{
 	position: relative;
-	border-top : solid 1px;
 	border-left : solid 1px;
-	border-right : solid 1px;
 	height: 15px;
 	font-size: 9px;
 	background-color: #90EE90;
@@ -85,9 +83,7 @@ td.calendar_week_column {
 }
 .calendar_public_holiday_div{
 	position: relative;
-	border-top : solid 1px;
 	border-left : solid 1px;
-	border-right : solid 1px;
 	height: 15px;
 	overflow: hidden;
 	font-size: 9px;
@@ -103,9 +99,7 @@ td.calendar_week_column {
 }
 .calendar_today_div{
 	position: relative;
-	border-top : solid 1px;
 	border-left : solid 1px;
-	border-right : solid 1px;
 	height: 15px;
 	font-size: 9px;
 	background-color: #F5DEB3;
@@ -123,6 +117,11 @@ td.calendar_week_column {
 	height: 70px;
 	font-size: 9px;
 	border-left : solid 1px;
-	border-right : solid 1px;
 	border-bottom: solid 1px;
+}
+.calendar_schedule_div a{
+	text-decoration:none;
+}
+.calendar_schedule_div a:hover {
+	text-decoration:underline;
 }
