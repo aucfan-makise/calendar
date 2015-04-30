@@ -1,8 +1,9 @@
 <?php 
     require_once "CalendarFunction.php";
-
+    
+    session_start();
     $week_day_name_array = CalendarFunction::getWeekDayNameArray();
-    $calendar_function = new CalendarFunction($_GET, $_POST);
+    $calendar_function = new CalendarFunction($_SESSION, $_GET, $_POST);
 ?>
 <!DOCTYPE html>
     <head>
@@ -13,6 +14,15 @@
     <body>
         <?php if ($calendar_function->isError()): ?>
             <pre><?php echo "エラー:".$calendar_function->getErrorMessage(); ?></pre>
+        <?php endif; ?>
+        <?php if(isset($_SESSION['user'])): ?>
+            User:<?php echo $_SESSION['user']; ?>
+            <form method='post' action='login.php'>
+                <input type='submit' name='logout' value='ログアウト'>
+            </form>
+        <?php else: ?>
+            <a href='login.php'>ログイン</a>
+            <a href='account_registration.php'>新規登録</a>
         <?php endif; ?>
         <form method="get" action="calendar.php">
             <button name="selected_date" value="<?php echo date('Y-n', strtotime($calendar_function->getSelectedCalendar()." -1 month")); ?>">前</button>
