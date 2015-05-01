@@ -1,18 +1,25 @@
+#calendar{
+	width: 100%;
+}
+
 .calendar_table {
 	border-collapse: separate;
 	border-spacing: 0;
 	border-right: 1px solid;
+	width: 100px;
 }
 
 .calendar_table td {
-	width: 60;
+	width: 14%;
 	margin: 0;
 	padding: 0;
+	border-bottom: 1px solid;
+	border-left: 1px solid;
 }
 
 .calendar_table tr {
 	vertical-align: top;
-	height: 80;
+	min-height: 85;
 }
 
 .calendar_table_title {
@@ -31,7 +38,7 @@ tr.calendar_week_row {
 }
 
 td.calendar_week_column {
-	width: 60px;
+	min-width: 60px;
 	border-left : solid 1px;
 	text-align: center;
 	vertical-align: middle;
@@ -39,7 +46,6 @@ td.calendar_week_column {
 
 .calendar_date_div{
 	position: relative;
-	border-left : solid 1px;
 	height: 15px;
 	font-size: 9px;
 }
@@ -53,7 +59,6 @@ td.calendar_week_column {
 }
 .calendar_sunday_div{
 	position: relative;
-	border-left : solid 1px;
 	height: 15px;
 	background-color: #FC8F8F;
 	font-size: 9px;
@@ -68,7 +73,6 @@ td.calendar_week_column {
 }
 .calendar_saturday_div{
 	position: relative;
-	border-left : solid 1px;
 	height: 15px;
 	font-size: 9px;
 	background-color: #90EE90;
@@ -83,7 +87,6 @@ td.calendar_week_column {
 }
 .calendar_public_holiday_div{
 	position: relative;
-	border-left : solid 1px;
 	height: 15px;
 	overflow: hidden;
 	font-size: 9px;
@@ -99,7 +102,6 @@ td.calendar_week_column {
 }
 .calendar_today_div{
 	position: relative;
-	border-left : solid 1px;
 	height: 15px;
 	font-size: 9px;
 	background-color: #F5DEB3;
@@ -114,10 +116,8 @@ td.calendar_week_column {
 }
 .calendar_schedule_div{
 	overflow: auto;
-	height: 70px;
+	min-height: 70px;
 	font-size: 9px;
-	border-left : solid 1px;
-	border-bottom: solid 1px;
 }
 .calendar_schedule_div a{
 	text-decoration:none;

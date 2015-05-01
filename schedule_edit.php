@@ -1,6 +1,7 @@
 <?php
 require_once 'CalendarFunction.php';
 require_once 'ScheduleFunction.php';
+require_once 'StaticFunction.php';
 
 session_start();
 session_regenerate_id(true);

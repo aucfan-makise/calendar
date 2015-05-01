@@ -319,7 +319,7 @@ class ScheduleFunction extends AbstractFunction
     {
         $array;
         try {
-            $stmt = mysqli_prepare($this->connection, "SELECT schedules.schedules_id, schedules.title, schedules.detail, schedules.start_time, schedules.end_time from schedules inner join user_schedule_relations on schedules.schedules_id = user_schedule_relations.schedules_id where user_schedule_relations.user_id=? AND schedules.schedules_id=? AND schedules.deleted_at is NULL");
+            $stmt = mysqli_prepare($this->connection, "SELECT schedules.schedules_id, schedules.title, schedules.detail, schedules.start_time, schedules.end_time from schedules inner join user_schedule_relations on schedules.schedules_id = user_schedule_relations.schedules_id where user_schedule_relations.user_id=? AND schedules.schedules_id=? AND schedules.deleted_at is NULL AND user_schedule_relations.deleted_at is NULL");
             if ($stmt === false)
                 throw new mysqli_sql_exception('prepare');
             $bind_result = mysqli_stmt_bind_param($stmt, 'ss', $this->user_id, $this->api_id);
@@ -509,7 +509,6 @@ class ScheduleFunction extends AbstractFunction
             $close_result = mysqli_stmt_close($stmt);
             if ($close_result === false)
                 throw new mysqli_sql_exception('close');
-                
                 // user_schedule_relationsのインサート
             $stmt = mysqli_prepare($this->connection, "INSERT INTO user_schedule_relations (user_id, schedules_id, created_at, update_at) values(?, ?, now(), now())");
             if ($stmt === false)

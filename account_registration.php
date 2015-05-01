@@ -1,4 +1,5 @@
 <?php
+require_once 'StaticFunction.php';
 require_once 'AccountFunction.php';
 $error_msg = null;
 $account_function = new AccountFunction($_POST);
@@ -18,7 +19,7 @@ $account_function = new AccountFunction($_POST);
             E-mailアドレス
             <br>
             <input type='text' size=30 name='address' value=
-            <?php echo $account_function->getAddress(); ?>
+            <?php echo StaticFunction::escape($account_function->getAddress()); ?>
             >
             <br>
             パスワード
@@ -36,7 +37,7 @@ $account_function = new AccountFunction($_POST);
 <!--         登録完了画面 -->
         登録が完了しました。
         <br>
-        <a href=>ログイン</a>
+        <a href='login.php'>ログイン</a>
         <a href='calendar.php'>カレンダーに戻る</a>
         <?php endif; ?>
     </body>
