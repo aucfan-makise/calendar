@@ -1,0 +1,39 @@
+複数ユーザが使えるようにするために必要なこと
+・アカウント登録機能
+	−パスワードの暗号化(crypt)
+・ログイン・ログアウト機能
+	-セッション
+・アカウント設定変更機能
+・データベースの改良
+
+データベース設計
+データベース名 calendar
+
+テーブル名 user_accounts
+user_id	int	auto_increment
+user_name	varchar(255)	unique	not null
+user_passwd	varchar(255)	not null
+created_at	datetime	not null
+update_at	datetime	not null
+deleted_at	datetime	
+
+テーブル名 user_schedule_relations
+カラム名	型
+user_schedule_relations_id	auto_increment
+user_id	int	not null
+schedules_id	int	not null
+created_at	datetime	not null
+update_at	datetime	not null
+deleted_at	datetime
+
+テーブル名 schedules
+カラム名	型
+schedules_id	auto_increment
+title	varchar(255)	not null
+detail	varchar(255)
+start_time	datetime	not null
+end_time	datetime	not null
+created_at	datetime	not null
+update_at	datetime	not null
+deleted_at	datetime
+
