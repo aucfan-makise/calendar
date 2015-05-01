@@ -1,0 +1,13 @@
+データベース名	schedule
+テーブル名	my_schedules
+
+カラム名	型
+my_schedules_id	int	auto_increment
+title	varchar(255)	not null
+detail	varchar(255)
+start_time	datetime	not null
+end_time	datetime	not null
+created_at	datetime	not null
+update_at	datetime	not null
+deleted_at	datetime
+
