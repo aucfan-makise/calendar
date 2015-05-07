@@ -4,10 +4,10 @@ require_once 'ScheduleFunction.php';
 require_once 'StaticFunction.php';
 
 session_start();
-session_regenerate_id(true);
 
 $calendar_function = new CalendarFunction($_SESSION, $_GET);
 $schedule_function = new ScheduleFunction($_SESSION, $_GET, $_POST);
+session_regenerate_id(true);
 ?>
 <!DOCTYPE html>
     <head>
@@ -139,9 +139,9 @@ $schedule_function = new ScheduleFunction($_SESSION, $_GET, $_POST);
                     <?php endforeach; ?>
                 </select>分<br>
                 タイトル:
-                <input type='text' size=10 maxlength='100' name='schedule_title'<?php echo $calendar_function->isViewMode() ? ' value="'.$view_schedule['title'].'"' : ''; ?>><br>
+                <input type='text' size=10 maxlength='100' name='schedule_title'<?php echo $calendar_function->isViewMode() ? ' value="'.StaticFunction::escape($view_schedule['title']).'"' : ''; ?>><br>
                 詳細  :
-                <input type='text' size=100 maxlength='500' name='schedule_detail'<?php echo $calendar_function->isViewMode() ? ' value="'.$view_schedule['detail'].'"' : ''; ?>>
+                <input type='text' size=100 maxlength='500' name='schedule_detail'<?php echo $calendar_function->isViewMode() ? ' value="'.StaticFunction::escape($view_schedule['detail']).'"' : ''; ?>>
                 <input type='submit' name='register' value='登録'>
                 
                 <?php if ($calendar_function->isViewMode()): ?>
@@ -150,6 +150,7 @@ $schedule_function = new ScheduleFunction($_SESSION, $_GET, $_POST);
                     <input type='submit' name='delete' value='削除'>
                 <?php endif; ?>                    
             </p>
+            <input type='hidden' name='session_id' value='<?php echo session_id(); ?>'>
         </form>
         <?php if ($calendar_function->isError()): ?>
             <pre><?php echo 'エラー:'.$calendar_function->getErrorMessage(); ?></pre>

@@ -3,7 +3,7 @@
 abstract class AbstractFunction
 {
 
-    private $error_msg;
+    protected $error_msg;
 
     /**
      * postのデータをチェックする
@@ -66,5 +66,16 @@ abstract class AbstractFunction
             $str = $str . ' ' . $msg;
         }
         return trim($str);
+    }
+    
+    /**
+     * CSRF対策として受け取ったsession idと現在のsession idが同一か確認する
+     * @access protected
+     * @param string $session_id
+     * @return boolean
+     */
+    protected function identifyUser($session_id){
+        session_start();
+        return $session_id === session_id() ? true : false;
     }
 }

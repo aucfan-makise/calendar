@@ -2,11 +2,12 @@
 require_once 'AccountFunction.php';
 $error_msg = null;
 $account_function = new AccountFunction($_POST);
+session_start();
 ?>
 <!DOCTYPE html>
     <head>
         <title>ログイン</title>
-        <?php if ($account_function->isLoginSuccessed() || $account_function->isLogoutSuccessed()): ?>
+        <?php if ($account_function->isLogoutSuccessed()): ?>
             <meta http-equiv='refresh' content='5;URL=calendar.php'>
         <?php else: ?>
             <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
@@ -18,7 +19,11 @@ $account_function = new AccountFunction($_POST);
         <?php endif; ?>
         <?php if ($account_function->isLoginSuccessed()): ?>
 <!--         ログイン成功 -->
-            ログインしました。５秒後にカレンダーページに戻ります。
+            ログインしました。
+            <form method='get' action='calendar.php'>
+                <input type='submit' name='calendar' value='カレンダー'>
+                <input type='hidden' name='session_id' value='<?php echo session_id(); ?>'>
+            </form>
         <?php elseif ($account_function->isLogoutSuccessed()): ?>
 <!--         ログアウト成功 -->
             ログアウトしました。５秒後にカレンダーページに戻ります。

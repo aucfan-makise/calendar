@@ -5,9 +5,6 @@ require_once 'AbstractFunction.php';
 
 class CalendarFunction extends AbstractFunction
 {
-
-    private $error_message;
-
     private $schedule_function;
 
     private static $calendar_div = array(
@@ -133,6 +130,10 @@ class CalendarFunction extends AbstractFunction
      */
     private function initialize($get_data)
     {
+//         CSRF対策
+        if (isset($get_data['session_id']) && ! $this->identifyUser($get_data['session_id'])){
+            $get_data = array();     
+        }
         $this->checkGetData($get_data);
         
         $this->todays_datetime = new DateTime('NOW');
@@ -595,6 +596,15 @@ class CalendarFunction extends AbstractFunction
 
     /**
      * override
+     * ここでのScheduleFunctionのエラーが有るかどうかも確認する
+     * @access public
+     * @return boolean
+     */
+    public function isError(){
+        return ! $this->schedule_function->isError() && is_null($this->error_msg) ? false : true;
+    }
+    /**
+     * override
      * ここでのScheduleFunctionのエラーメッセージを足して出力する
      * 
      * @access public
@@ -603,8 +613,8 @@ class CalendarFunction extends AbstractFunction
     public function getErrorMessage()
     {
         $str = '';
-        if (! is_null($this->error_message)) {
-            foreach ($this->error_message as $msg) {
+        if (! is_null($this->error_msg)) {
+            foreach ($this->error_msg as $msg) {
                 $str = $str . ' ' . $msg;
             }
         }

@@ -3,9 +3,9 @@
     require_once 'CalendarFunction.php';
     
     session_start();
-    session_regenerate_id(true);
     $week_day_name_array = CalendarFunction::getWeekDayNameArray();
     $calendar_function = new CalendarFunction($_SESSION, $_GET, $_POST);
+    session_regenerate_id(true);
 ?>
 <!DOCTYPE html>
     <head>
@@ -21,6 +21,7 @@
             User:<?php echo $_SESSION['user']; ?>
             <form method='post' action='login.php'>
                 <input type='submit' name='logout' value='ログアウト'>
+                <input type='hidden' name='session_id' value='<?php echo session_id(); ?>'>
             </form>
         <?php else: ?>
             <a href='login.php'>ログイン</a>
@@ -29,6 +30,7 @@
         <form method='get' action='calendar.php'>
             <button name='selected_date' value='<?php echo date('Y-n', strtotime($calendar_function->getSelectedCalendar().' -1 month')); ?>'>前</button>
             <button name='selected_date' value='<?php echo date('Y-n', strtotime($calendar_function->getSelectedCalendar().' +1 month')); ?>'>次</button>
+            <input type='hidden' name='session_id' value='<?php echo session_id(); ?>'>
         </form>
             <!-- コンボボックス -->
         <form action='calendar.php' method='get'>
@@ -51,6 +53,7 @@
                 <input type='text' size=2 maxlength='2' name='calendar_size' value='<?php echo $calendar_function->getCalendarSize(); ?>'>
                 <input type= 'submit' value='change'>
             </p>
+            <input type='hidden' name='session_id' value='<?php echo session_id(); ?>'>
         </form>
         <table id='calendar'>
             <tr>
@@ -87,7 +90,7 @@
                             <?php endif; ?>
                                 <td>
                                     <div class=<?php echo $day['div_class']; ?>>
-                                        <a href='schedule_edit.php?selected_date=<?php echo $day['datetime']->format('Y-n-').$day['day']; ?>'></a>
+                                        <a href='schedule_edit.php?selected_date=<?php echo $day['datetime']->format('Y-n-').$day['day']; ?>&session_id=<?php echo session_id(); ?>'></a>
                                         <div>                                        
                                             <?php echo $day['day'];
                                             echo CalendarFunction::isHoliday($day) ? ' '.CalendarFunction::getHolidayName($day) : ''; ?>
@@ -99,7 +102,7 @@
                                         <?php endforeach; ?>
                                         <?php if (! is_null($day['schedules'])): ?>
                                             <?php foreach ($day['schedules'] as $id => $schedule_array): ?>
-                                                <a href='schedule_edit.php?selected_date=<?php echo $calendar_function->getSelectedCalendar(); ?>&view_id=<?php echo $id; ?>'>
+                                                <a href='schedule_edit.php?selected_date=<?php echo $calendar_function->getSelectedCalendar(); ?>&view_id=<?php echo $id; ?>&session_id=<?php echo session_id(); ?>'>
                                                 <?php if ($schedule_array['start_time'] == '00:00' && $schedule_array['end_time'] == '23:59'): ?>
                                                     <?php echo StaticFunction::escape($schedule_array['title']); ?> 
                                                 <?php elseif ($schedule_array['end_time'] == '23:59'): ?>

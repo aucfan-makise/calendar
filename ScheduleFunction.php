@@ -147,6 +147,18 @@ class ScheduleFunction extends AbstractFunction
      */
     private function scheduleEditInitialize(array $get_data, array $post_data)
     {
+//         CSRF対策
+        $session_id;
+        if (isset($get_data['session_id'])) $session_id = $get_data['session_id'];
+        if (isset($post_data['session_id'])) $session_id = $post_data['session_id'];
+        if (! $this->identifyUser($session_id)){
+            $get_data = array();
+            $post_data = array();
+            $this->user_id = null;
+            $_SESSION = array();
+            session_write_close();
+        }
+        
         $this->checkPostData($post_data);
         
         // スケジュールの編集
