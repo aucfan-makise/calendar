@@ -1,12 +1,13 @@
 <?php
 require_once 'AccountFunction.php';
+session_start();
 $error_msg = null;
 $account_function = new AccountFunction($_POST);
 ?>
 <!DOCTYPE html>
     <head>
         <title>ログイン</title>
-        <?php if ($account_function->isLoginSuccessed() || $account_function->isLogoutSuccessed()): ?>
+        <?php if ($account_function->isLogoutSuccessed()): ?>
             <meta http-equiv='refresh' content='5;URL=calendar.php'>
         <?php else: ?>
             <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
@@ -18,7 +19,10 @@ $account_function = new AccountFunction($_POST);
         <?php endif; ?>
         <?php if ($account_function->isLoginSuccessed()): ?>
 <!--         ログイン成功 -->
-            ログインしました。５秒後にカレンダーページに戻ります。
+            ログインしました。
+            <form method='get' action='calendar.php'>
+                <input type='submit' name='calendar' value='カレンダー'>
+            </form>
         <?php elseif ($account_function->isLogoutSuccessed()): ?>
 <!--         ログアウト成功 -->
             ログアウトしました。５秒後にカレンダーページに戻ります。
@@ -34,6 +38,8 @@ $account_function = new AccountFunction($_POST);
                 <input type='password' size=30 name='password'>
                 <br>
                 <input type='submit' name='login' value='ログイン'>
+                <input type='hidden' name='token' value='
+                    <?php echo $calendar_function->cryptSessionId(session_id()); ?>'>
             </form>
             <a href='account_registration.php'>新規登録</a>
         <?php endif; ?>

@@ -1,5 +1,4 @@
 <?php
-require_once 'StaticFunction.php';
 require_once 'AccountFunction.php';
 $error_msg = null;
 $account_function = new AccountFunction($_POST);
@@ -19,7 +18,7 @@ $account_function = new AccountFunction($_POST);
             E-mailアドレス
             <br>
             <input type='text' size=30 name='address' value=
-            <?php echo StaticFunction::escape($account_function->getAddress()); ?>
+            <?php echo $account_function->e($account_function->getAddress()); ?>
             >
             <br>
             パスワード

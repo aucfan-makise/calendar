@@ -52,7 +52,6 @@ class ScheduleFunction extends AbstractFunction
             $this->scheduleEditInitialize($get_data, $post_data);
         } elseif (! is_null($get_data)) {
             $this->apiInitialize($get_data);
-            session_start();
             $this->checkSessionData($_SESSION);
         }
     }
@@ -147,11 +146,15 @@ class ScheduleFunction extends AbstractFunction
      */
     private function scheduleEditInitialize(array $get_data, array $post_data)
     {
+//         CSRF対策
+        $token = '';
+        if (isset($post_data['token'])) $token = $post_data['token'];
+        
         $this->checkPostData($post_data);
         
         // スケジュールの編集
         // ログインしていないユーザには編集をさせない
-        if (! is_null($this->user_id)) {
+        if (! is_null($this->user_id) || $this->identifyUser($token)) {
             if ($this->modify_mode['register']) {
                 $this->insertSchedule();
             } elseif ($this->modify_mode['delete']) {
@@ -198,7 +201,16 @@ class ScheduleFunction extends AbstractFunction
                 xor $this->modify_mode['delete'])) {
                     throw new Exception('モードが変です。');
                 }
-                
+                try{
+                    $this->dateTimeCheck(
+                        $post_data['schedule_start_year'], 
+                        $post_data['schedule_start_month'], 
+                        $post_data['schedule_start_day'],
+                        $post_data['schedule_start_hour'],
+                        $post_data['schedule_start_minute']);
+                } catch (Exception $e){
+                    throw new Exception('開始日時の不正:'.$e->getMessage());
+                }
                 $start_datetime = new DateTime();
                 $date_result = $start_datetime->setDate(
                     $post_data['schedule_start_year'], 
@@ -210,9 +222,18 @@ class ScheduleFunction extends AbstractFunction
                 if ($date_result === false || $time_result === false)
                     throw new Exception('開始日時が不正な値です。');
                 
-                $this->dateTimeCheck($start_datetime);
                 $this->schedule['start'] = $start_datetime;
                 
+                try{
+                    $this->dateTimeCheck(
+                        $post_data['schedule_end_year'], 
+                        $post_data['schedule_end_month'], 
+                        $post_data['schedule_end_day'],
+                        $post_data['schedule_end_hour'],
+                        $post_data['schedule_end_minute']);
+                } catch (Exception $e){
+                    throw new Exception('終了日時の不正:'.$e->getMessage());
+                }
                 $end_datetime = new DateTime();
                 $date_result = $end_datetime->setDate(
                     $post_data['schedule_end_year'], 
@@ -224,7 +245,6 @@ class ScheduleFunction extends AbstractFunction
                 if ($date_result === false || $time_result === false)
                     throw new Exception('終了日時が不正な値です。');
                 
-                $this->dateTimeCheck($end_datetime);
                 $this->schedule['end'] = $end_datetime;
                 // 開始時間と終了時間の関係をチェック
                 if ($start_datetime >= $end_datetime)
@@ -597,11 +617,41 @@ class ScheduleFunction extends AbstractFunction
      * @param DateTime $datetime            
      * @throws Exception
      */
-    private function dateTimeCheck(DateTime $datetime)
+    private function dateTimeCheck($year, $month, $day, $hour, $minute)
     {
-        $datetime = date_parse($datetime->format("Y-m-d"));
-        if ($datetime["year"] < 2015 || 2018 < $datetime["year"])
+        if (! checkdate($month, $day, $year)){
+            throw new Exception('日付が不正です。');
+        }
+        if ($year < 2015 || 2018 < $year)
             throw new Exception("年が不正です。");
+        if (! preg_match('/^([0-9]|1[0-9]|2[0-3])$/', $hour)){
+            throw new Exception('時が不正です。');
+        }
+        if (! preg_match('/^[0-5][0-9]$/', $minute)){
+            throw new Exception('分が不正です。');
+        }
+    }
+    
+    /**
+     * 編集されたかどうか調べる
+     * @access public
+     * @return boolean
+     */
+    public function isModified(){
+        return $this->modify_mode['register'] xor $this->modify_mode['modify'] xor $this->modify_mode['delete'] ? true : false;
+    }
+    
+    /**
+     * 編集モードを調べる
+     * @access public
+     * @return Ambigous <boolean, multitype:boolean >|boolean
+     */
+    public function getModifyMode(){
+        foreach ($this->modify_mode as $mode => $bool){
+            if ($bool === true) return $mode;
+        }
+        
+        return false;
     }
 }
 ?>
