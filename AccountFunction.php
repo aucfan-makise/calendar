@@ -65,11 +65,12 @@ class AccountFunction extends AbstractFunction
                     $this->registerAccount();
                     $this->is_registered = true;
                 } elseif ($this->status['login']) {
+                    if (! $this->identifyUser($post_data['token'])){
+                        throw new Exception('不正なログインです。');
+                    }
                     $this->is_login_successed = true;
-                    session_start();
                     $this->setSessionData();
                 } elseif ($this->status['logout']) {
-                    session_start();
                     $_SESSION = array();
                     session_write_close();
                     $this->is_logout_successed = true;

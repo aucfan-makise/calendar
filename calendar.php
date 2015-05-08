@@ -1,9 +1,7 @@
 <?php 
-    require_once 'StaticFunction.php';
     require_once 'CalendarFunction.php';
     
     session_start();
-    session_regenerate_id(true);
     $week_day_name_array = CalendarFunction::getWeekDayNameArray();
     $calendar_function = new CalendarFunction($_SESSION, $_GET, $_POST);
 ?>
@@ -12,6 +10,15 @@
         <title>Calendar</title>
         <link rel='stylesheet' type='text/css' href='./calendar.css'>
         <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<!--         <script type="text/javascript"> -->
+<!-- //         $(function(){ -->
+<!-- //             $('.aaa').css('display', 'none'); -->
+<!-- //             $('body').click(function(){ -->
+<!-- //             $('.aaa').slideToggle('slow'); -->
+<!-- //             }); -->
+<!-- //             }); -->
+<!--         </script> -->
     </head>
     <body>
         <?php if ($calendar_function->isError()): ?>
@@ -52,6 +59,8 @@
                 <input type= 'submit' value='change'>
             </p>
         </form>
+<!--         <div class="aaa"> -->
+        
         <table id='calendar'>
             <tr>
             <?php $calendar_num = 0;
@@ -95,19 +104,19 @@
                                     </div>
                                     <div class='calendar_schedule_div'>
                                         <?php foreach ($day['aucfan_topic'] as $topic): ?>
-                                            <a href='<?php echo $topic['link']; ?>'><?php echo StaticFunction::escape($topic['title']); ?></a>
+                                            <a href='<?php echo $topic['link_e']; ?>'><?php echo $calendar_function->e($topic['title_e']); ?></a>
                                         <?php endforeach; ?>
                                         <?php if (! is_null($day['schedules'])): ?>
                                             <?php foreach ($day['schedules'] as $id => $schedule_array): ?>
                                                 <a href='schedule_edit.php?selected_date=<?php echo $calendar_function->getSelectedCalendar(); ?>&view_id=<?php echo $id; ?>'>
                                                 <?php if ($schedule_array['start_time'] == '00:00' && $schedule_array['end_time'] == '23:59'): ?>
-                                                    <?php echo StaticFunction::escape($schedule_array['title']); ?> 
+                                                    <?php echo $calendar_function->e($schedule_array['title']); ?> 
                                                 <?php elseif ($schedule_array['end_time'] == '23:59'): ?>
-                                                    <?php echo $schedule_array['start_time']; ?>~ <?php echo StaticFunction::escape($schedule_array['title']); ?>
+                                                    <?php echo $schedule_array['start_time']; ?>~ <?php echo $calendar_function->e($schedule_array['title']); ?>
                                                 <?php elseif ($schedule_array['start_time'] == '00:00'): ?>
-                                                    ~<?php echo $schedule_array['end_time']; ?> <?php echo StaticFunction::escape($schedule_array['title']);?>
+                                                    ~<?php echo $schedule_array['end_time']; ?> <?php echo $calendar_function->e($schedule_array['title']);?>
                                                 <?php else: ?>
-                                                    <?php echo $schedule_array['start_time']; ?>~<?php echo $schedule_array['end_time']; ?> <?php echo StaticFunction::escape($schedule_array['title']); ?>
+                                                    <?php echo $schedule_array['start_time']; ?>~<?php echo $schedule_array['end_time']; ?> <?php echo $calendar_function->e($schedule_array['title']); ?>
                                                 <?php endif; ?>
                                                 </a>
                                                 <br>
@@ -127,5 +136,6 @@
             <?php endforeach; ?>
             </tr>
         </table>
+<!--         </div> -->
     </body>
 </html>

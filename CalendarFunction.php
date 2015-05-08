@@ -5,9 +5,6 @@ require_once 'AbstractFunction.php';
 
 class CalendarFunction extends AbstractFunction
 {
-
-    private $error_message;
-
     private $schedule_function;
 
     private static $calendar_div = array(
@@ -378,7 +375,7 @@ class CalendarFunction extends AbstractFunction
                 if (strtotime($this->end_calendar) <= strtotime($topic_array['time']))
                     break 2;
                     // 0:year 1:month 2:day 3:hour 4:minute 5:second
-                $time = explode('-', date('Y-n-d-H-i-s', strtotime($topics->pubDate)));
+                $time = explode('-', date('Y-n-j-H-i-s', strtotime($topics->pubDate)));
                 
                 if (! in_array($time[0], $topics_array))
                     $topics_array[$time[0]][] = array();
@@ -390,7 +387,9 @@ class CalendarFunction extends AbstractFunction
                 $topic_array = array();
                 $topic_array['time'] = $time[3] . '-' . $time[4] . '-' . $time[5];
                 $topic_array['title'] = (string) $topics->title;
+                $topic_array['title_e'] = $this->e((string) $topic_array['title']);
                 $topic_array['link'] = (string) $topics->link;
+                $topic_array['link_e'] = $this->e((string) $topic_array['link']);
                 $topics_array[$time[0]][$time[1]][$time[2]][] = $topic_array;
             }
         }
@@ -595,6 +594,15 @@ class CalendarFunction extends AbstractFunction
 
     /**
      * override
+     * ここでのScheduleFunctionのエラーが有るかどうかも確認する
+     * @access public
+     * @return boolean
+     */
+    public function isError(){
+        return ! $this->schedule_function->isError() && is_null($this->error_msg) ? false : true;
+    }
+    /**
+     * override
      * ここでのScheduleFunctionのエラーメッセージを足して出力する
      * 
      * @access public
@@ -603,8 +611,8 @@ class CalendarFunction extends AbstractFunction
     public function getErrorMessage()
     {
         $str = '';
-        if (! is_null($this->error_message)) {
-            foreach ($this->error_message as $msg) {
+        if (! is_null($this->error_msg)) {
+            foreach ($this->error_msg as $msg) {
                 $str = $str . ' ' . $msg;
             }
         }
