@@ -130,10 +130,6 @@ class CalendarFunction extends AbstractFunction
      */
     private function initialize($get_data)
     {
-//         CSRF対策
-        if (isset($get_data['session_id']) && ! $this->identifyUser($get_data['session_id'])){
-            $get_data = array();     
-        }
         $this->checkGetData($get_data);
         
         $this->todays_datetime = new DateTime('NOW');
@@ -379,7 +375,7 @@ class CalendarFunction extends AbstractFunction
                 if (strtotime($this->end_calendar) <= strtotime($topic_array['time']))
                     break 2;
                     // 0:year 1:month 2:day 3:hour 4:minute 5:second
-                $time = explode('-', date('Y-n-d-H-i-s', strtotime($topics->pubDate)));
+                $time = explode('-', date('Y-n-j-H-i-s', strtotime($topics->pubDate)));
                 
                 if (! in_array($time[0], $topics_array))
                     $topics_array[$time[0]][] = array();
@@ -391,7 +387,9 @@ class CalendarFunction extends AbstractFunction
                 $topic_array = array();
                 $topic_array['time'] = $time[3] . '-' . $time[4] . '-' . $time[5];
                 $topic_array['title'] = (string) $topics->title;
+                $topic_array['title_e'] = $this->e((string) $topic_array['title']);
                 $topic_array['link'] = (string) $topics->link;
+                $topic_array['link_e'] = $this->e((string) $topic_array['link']);
                 $topics_array[$time[0]][$time[1]][$time[2]][] = $topic_array;
             }
         }

@@ -9,5 +9,6 @@ class Properties{
     const AUCTOPIC = 'http://aucfan.com/article/feed/';
     const DATABASE_USER_NAME = 'makise';
     const DATABASE_NAME = 'calendar';
+    const MY_CRYPT_SALT = '$1$aucfan$';
 }
 ?>
