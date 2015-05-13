@@ -92,6 +92,7 @@ abstract class AbstractFunction
         echo $_SESSION['token']. ":".$token;
         echo var_dump($_SESSION['token'] === $token ? true : false);
 //         return $_SESSION['token'] === $token ? true : false;
+        
         return true;
     }
     

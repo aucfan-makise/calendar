@@ -57,60 +57,7 @@
 		});
 		
 
-		$('#schedule_form button').click(function(event) {
-			event.preventDefault();
-			console.log('submit');
-			var $form = $('#schedule_form');
-			var param = $form.serializeArray();
-			$.ajax({
-				url: 'schedule_edit.php',
-				type: 'post',
-				dataType : 'json',
-				data: {schedule_start_year : param[0].value,
-					schedule_start_month : param[1].value,
-					schedule_start_day : param[2].value,
-					schedule_start_hour : param[3].value,
-					schedule_start_minute : param[4].value,
-					schedule_end_year : param[5].value,
-					schedule_end_month : param[6].value,
-					schedule_end_day : param[7].value,
-					schedule_end_hour : param[8].value,
-					schedule_end_minute : param[9].value,
-					schedule_title : param[10].value,
-					schedule_detail : param[11].value,
-					token : param[12].value,
-					view_id : $('#view_id').val(),
-					mode :  $(this).attr('id')
-					},
-				
-				beforeSend: function(xhr, settings){
-					$('#register, #modify, #delete').attr('disabled', true);
-				},
-				success: function(data){
-					if(data.result === true){
-						if(data.mode === 'register'){
-							$('#schedule_form_finish_message').text('登録しました。');
-						}else if(data.mode === 'modify'){
-							$('#schedule_form_finish_message').text('編集しました。');
-						}else if(data.mode === 'delete'){
-							$('#schedule_form_finish_message').text('削除しました。');
-						}
-						$('#schedule_form_div, #register, #modify, #delete').css('visibility', 'hidden');
-						$('#schedule_form_finish_div').css('visibility', 'visible');
-						$('#error_message').text('');
-						$('#schedule_form_div, #schedule_form_div *').css('visibility', 'hidden');
-					}else {
-						$('#error_message').text(data.error_message);
-					}
-					$('#register, #modify, #delete').attr('disabled', false);
-				},
-				error: function(xhr, textStatus, error){
-					alert('Ajax Error.'+error);
-					$('#register, #modify, #delete').attr('disabled', false);
-				}
-			});
-		});
-		$('#schedule_form_close').click(function(){
+				$('#schedule_form_close').click(function(){
 			$('#schedule_form_div, #schedule_form_div *').css('visibility', 'hidden');
 			$('#schedule_title, #schedule_detail').val('');
 			$('#register').attr('disabled', false);
@@ -149,7 +96,7 @@
 	};
 	
 	function appendMonthSelectBox(name, month){
-		name = name + '_month]';
+	    name = name + '_month]';
 		$(name).children().remove();
 		for(var i = 1; i <= 12; ++i){
 			$(name).append($('<option>').html(i).val(i));
