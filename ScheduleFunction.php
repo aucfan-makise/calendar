@@ -19,7 +19,8 @@ class ScheduleFunction extends AbstractFunction
     private $modify_mode = array(
         'register' => false,
         'modify' => false,
-        'delete' => false
+        'delete' => false,
+        'view' => false
     );
     
     // api関連
@@ -164,7 +165,7 @@ class ScheduleFunction extends AbstractFunction
             }
         }
         
-        $this->schedule['view_id'] = $get_data['view_id'];
+        $this->schedule['view_id'] = $_POST['view_id'];
     }
 
     /**
@@ -181,16 +182,22 @@ class ScheduleFunction extends AbstractFunction
                 
                 // 値があるべきものはあるかどうかをチェック
                 foreach ($post_data as $key => $value) {
+                    if($key === 'view_id') continue;
                     if (empty($value) && $key != 'schedule_detail')
                         throw new Exception($key . 'の値がありません。');
                 }
                 $this->schedule['title'] = $post_data['schedule_title'];
-                if (isset($post_data['register']))
-                    $this->modify_mode['register'] = true;
-                if (isset($post_data['modify']))
-                    $this->modify_mode['modify'] = true;
-                if (isset($post_data['delete']))
-                    $this->modify_mode['delete'] = true;
+                if (isset($_POST['mode'])){
+                    if ($_POST['mode'] == 'register'){
+                        $this->modify_mode['register'] = true;
+                    }else if($_POST['mode'] == 'delete'){
+                        $this->modify_mode['delete'] = true;
+                    }else if($_POST['mode'] == 'modify'){
+                        $this->modify_mode['modify'] = true;
+                    }else if($_POST['mode'] == 'view'){
+                        $this->modify_mode['view'] = true;
+                    }
+                }
                 
                 if (isset($post_data['view_id']))
                     $this->schedule['view_id'] = $post_data['view_id'];
@@ -198,9 +205,12 @@ class ScheduleFunction extends AbstractFunction
                     // モードのチェック
                 if (! (($this->modify_mode['register'] 
                 xor $this->modify_mode['modify']) 
-                xor $this->modify_mode['delete'])) {
+                xor $this->modify_mode['delete'])
+                xor $this->modify_mode['view']) {
                     throw new Exception('モードが変です。');
                 }
+                
+                if ($this->modify_mode['view'] === true) break;
                 try{
                     $this->dateTimeCheck(
                         $post_data['schedule_start_year'], 
@@ -627,7 +637,7 @@ class ScheduleFunction extends AbstractFunction
         if (! preg_match('/^([0-9]|1[0-9]|2[0-3])$/', $hour)){
             throw new Exception('時が不正です。');
         }
-        if (! preg_match('/^[0-5][0-9]$/', $minute)){
+        if (! preg_match('/^[1-5]?[0-9]$/', $minute)){
             throw new Exception('分が不正です。');
         }
     }

@@ -3,22 +3,15 @@
     
     session_start();
     $week_day_name_array = CalendarFunction::getWeekDayNameArray();
-    $calendar_function = new CalendarFunction($_SESSION, $_GET, $_POST);
+    $calendar_function = new CalendarFunction();
 ?>
 <!DOCTYPE html>
     <head>
         <title>Calendar</title>
         <link rel='stylesheet' type='text/css' href='./calendar.css'>
         <meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
-<!--         <script type="text/javascript"> -->
-<!-- //         $(function(){ -->
-<!-- //             $('.aaa').css('display', 'none'); -->
-<!-- //             $('body').click(function(){ -->
-<!-- //             $('.aaa').slideToggle('slow'); -->
-<!-- //             }); -->
-<!-- //             }); -->
-<!--         </script> -->
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script type="text/javascript" src="./calendar.js"></script>
     </head>
     <body>
         <?php if ($calendar_function->isError()): ?>
@@ -33,17 +26,11 @@
             <a href='login.php'>ログイン</a>
             <a href='account_registration.php'>新規登録</a>
         <?php endif; ?>
-        <form method='get' action='calendar.php'>
-            <button name='selected_date' value='<?php echo date('Y-n', strtotime($calendar_function->getSelectedCalendar().' -1 month')); ?>'>前</button>
-            <button name='selected_date' value='<?php echo date('Y-n', strtotime($calendar_function->getSelectedCalendar().' +1 month')); ?>'>次</button>
-        </form>
+        <button name='selected_date_before'>前</button>
+        <button name='selected_date_next'>次</button>
             <!-- コンボボックス -->
-        <form action='calendar.php' method='get'>
             <p>
-                <select name='selected_date'>
-                    <?php foreach ($calendar_function->getComboBoxArray() as $key => $value): ?>
-                    <option value='<?php echo $key; ?>'<?php echo $calendar_function->isSelectedCalendar($key) ? ' selected' : ''; ?>><?php echo $value; ?></option>
-                    <?php endforeach; ?>
+                <select name='selected_date_combo'>
                 </select>
             週の始まり
             <select name='start_week_day'>
@@ -51,91 +38,58 @@
                     <option value='<?php echo $key; ?>'<?php echo $calendar_function->isStartWeekDay($key) ? ' selected' : ''; ?>><?php echo $value; ?></option>
                 <?php endforeach; ?>
             </select>
-            <input type='submit' value='select'>
             </p>
+        <form action='calendar.php' method='get'>
             <p>
             表示するカレンダーの数
                 <input type='text' size=2 maxlength='2' name='calendar_size' value='<?php echo $calendar_function->getCalendarSize(); ?>'>
                 <input type= 'submit' value='change'>
             </p>
         </form>
-<!--         <div class="aaa"> -->
         
         <table id='calendar'>
-            <tr>
-            <?php $calendar_num = 0;
-            foreach ($calendar_function->getCalendarArray() as $year_array):
-                $year = array_search($year_array, $calendar_function->getCalendarArray());
-                    foreach ($year_array as $month_array):
-                        $month = array_search($month_array, $year_array);
-                        $calendar_datetime = new DateTime($year.'-'.$month);
-                        if ($month_array['in_range'] === true):
-                        if ($calendar_num % 3 == 0 && $calendar_num != 0): ?>
-            </tr>
-            <tr>
-                    <?php endif; ?>
-                <td valign='top'><table class='calendar_table'>
-                    <tr>
-                        <td class='calendar_table_title' colspan='7'>
-                                <?php echo $calendar_datetime->format('Y年n月')?>
-                        </td>
-                    </tr>
-                    <tr class='calendar_week_row'>
-                        <?php foreach (range($calendar_function->getStartWeekDay(), 6) as $week_day_num): ?>
-                            <td class='calendar_week_column'><?php echo $week_day_name_array[$week_day_num]; ?></td>
-                        <?php endforeach; ?>
-                        <?php if ($calendar_function->getStartWeekDay() != 0): ?>
-                            <?php foreach (range(0, $calendar_function->getStartWeekDay() - 1) as $week_day_num): ?>
-                                <td class='calendar_week_column'><?php echo $week_day_name_array['$week_day_num']; ?></td>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tr>
-                        <?php foreach (($calendar_function->getMonthCalendarArray($calendar_datetime)) as $day):
-                            if ($day['week_day'] == $calendar_function->getStartWeekDay()): ?>
-                            <tr>
-                            <?php endif; ?>
-                                <td>
-                                    <div class=<?php echo $day['div_class']; ?>>
-                                        <a href='schedule_edit.php?selected_date=<?php echo $day['datetime']->format('Y-n-').$day['day']; ?>'></a>
-                                        <div>                                        
-                                            <?php echo $day['day'];
-                                            echo CalendarFunction::isHoliday($day) ? ' '.CalendarFunction::getHolidayName($day) : ''; ?>
-                                        </div>
-                                    </div>
-                                    <div class='calendar_schedule_div'>
-                                        <?php foreach ($day['aucfan_topic'] as $topic): ?>
-                                            <a href='<?php echo $topic['link_e']; ?>'><?php echo $calendar_function->e($topic['title_e']); ?></a>
-                                        <?php endforeach; ?>
-                                        <?php if (! is_null($day['schedules'])): ?>
-                                            <?php foreach ($day['schedules'] as $id => $schedule_array): ?>
-                                                <a href='schedule_edit.php?selected_date=<?php echo $calendar_function->getSelectedCalendar(); ?>&view_id=<?php echo $id; ?>'>
-                                                <?php if ($schedule_array['start_time'] == '00:00' && $schedule_array['end_time'] == '23:59'): ?>
-                                                    <?php echo $calendar_function->e($schedule_array['title']); ?> 
-                                                <?php elseif ($schedule_array['end_time'] == '23:59'): ?>
-                                                    <?php echo $schedule_array['start_time']; ?>~ <?php echo $calendar_function->e($schedule_array['title']); ?>
-                                                <?php elseif ($schedule_array['start_time'] == '00:00'): ?>
-                                                    ~<?php echo $schedule_array['end_time']; ?> <?php echo $calendar_function->e($schedule_array['title']);?>
-                                                <?php else: ?>
-                                                    <?php echo $schedule_array['start_time']; ?>~<?php echo $schedule_array['end_time']; ?> <?php echo $calendar_function->e($schedule_array['title']); ?>
-                                                <?php endif; ?>
-                                                </a>
-                                                <br>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                                <?php if ($day['week_day'] == ($calendar_function->getStartWeekDay() + 6) % 7): ?>
-                            </tr>
-                                <?php endif; ?>
-                        <?php endforeach; ?>
-                </table>
-                </td>
-                        <?php $calendar_num++; ?>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            <?php endforeach; ?>
-            </tr>
         </table>
-<!--         </div> -->
+        <div id='schedule_form_div'>
+            <form id='schedule_form'>
+                <p>
+                予定の編集<br>
+                開始日
+                    <select name='schedule_start_year'></select>年
+                    <select name='schedule_start_month'></select>月
+                    <select name='schedule_start_day'></select>日
+                    <select name='schedule_start_hour'></select>時
+                    <select name='schedule_start_minute'></select>分
+                    <br>
+               終了日
+                    <select name='schedule_end_year'></select>年
+                    <select name='schedule_end_month'></select>月
+                    <select name='schedule_end_day'></select>日
+                    <select name='schedule_end_hour'></select>時
+                    <select name='schedule_end_minute'></select>分
+                    <br>
+                    タイトル:
+                    <input type='text' size=10 maxlength='100' id='schedule_title' name='schedule_title'><br>
+                    詳細  :
+                    <input type='text' size=100 maxlength='500' id='schedule_detail' name='schedule_detail'>
+                    
+<!--                     <input type='submit' id='register' name='register' value='登録'> -->
+                    <button id='register'>登録</button>
+                    <input type='hidden' id='mode'>
+                    <input type='hidden' id='view_id'>
+                    <button id='modify'>修正</button>
+                    <button id='delete'>削除</button>
+<!--                     <input type='submit' id='modify' name='modify' value='修正'> -->
+<!--                     <input type='submit' id='delete' name='delete' value='削除'> -->
+                </p>
+                <input type='hidden' name='token' value='
+                    <?php echo $calendar_function->cryptSessionId(session_id()); ?>'>
+            </form>
+            <button id='schedule_form_close'>キャンセル</button>
+            <div id='error_message'></div>
+        </div>
+        <div id='schedule_form_finish_div'>
+            <div id='schedule_form_finish_message'></div>
+            <button id='schedule_form_finish_div_close'>閉じる</button>
+        </div>
     </body>
 </html>

@@ -114,12 +114,12 @@ class CalendarFunction extends AbstractFunction
      * @param array $get_data            
      * @param array $post_data            
      */
-    public function __construct(array $session_data, array $get_data = array(), array $post_data = array())
+    public function __construct()
     {
-        $this->schedule_function = new ScheduleFunction($session_data, $get_data, $post_data);
-        $this->view_id = $get_data['view_id'];
+        $this->schedule_function = new ScheduleFunction($_SESSION, $_GET, $_POST);
+        $this->view_id = $_POST['view_id'];
         
-        $this->initialize($get_data);
+        $this->initialize($_GET);
     }
 
     /**
@@ -538,6 +538,8 @@ class CalendarFunction extends AbstractFunction
             foreach (range($before_month_start_day, $before_month_end_day) as $day) {
                 $input = $this->calendar_array[$before_month_datetime_array['year']][$before_month_datetime_array['month']][$day];
                 $input['datetime'] = $before_month_datetime;
+                $input['year'] = $before_month_datetime_array['year'];
+                $input['month'] = $before_month_datetime_array['month'];
                 $array[] = $input;
             }
         }
@@ -546,6 +548,8 @@ class CalendarFunction extends AbstractFunction
             if (is_integer($key)) {
                 $input = $value;
                 $input['datetime'] = $calendar_datetime;
+                $input['year'] = $calendar_datetime_array['year'];
+                $input['month'] = $calendar_datetime_array['month'];
                 $array[] = $input;
             }
         }
@@ -555,6 +559,8 @@ class CalendarFunction extends AbstractFunction
             foreach (range(1, $next_month_end_day) as $day) {
                 $input = $this->calendar_array[$next_month_datetime_array['year']][$next_month_datetime_array['month']][$day];
                 $input['datetime'] = $next_month_datetime;
+                $input['year'] = $next_month_datetime_array['year'];
+                $input['month'] = $next_month_datetime_array['month'];
                 $array[] = $input;
             }
         }

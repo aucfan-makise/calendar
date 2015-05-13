@@ -125,3 +125,24 @@ td.calendar_week_column {
 .calendar_schedule_div a:hover {
 	text-decoration:underline;
 }
+
+#schedule_form_div {
+	border: 10px ridge;
+	background-color: white;
+	position: absolute;
+	top: 200px;
+	left: 300px;
+	width: 650px;
+	height: 310px;
+	visibility: hidden;
+}
+#schedule_form_finish_div {
+	border: 10px ridge;
+	background-color: white;
+	position: absolute;
+	top: 200px;
+	left: 300px;
+	width: 650px;
+	height: 310px;
+	visibility: hidden;
+}

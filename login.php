@@ -39,7 +39,7 @@ $account_function = new AccountFunction($_POST);
                 <br>
                 <input type='submit' name='login' value='ログイン'>
                 <input type='hidden' name='token' value='
-                    <?php echo $calendar_function->cryptSessionId(session_id()); ?>'>
+                    <?php echo $account_function->cryptSessionId(session_id()); ?>'>
             </form>
             <a href='account_registration.php'>新規登録</a>
         <?php endif; ?>
